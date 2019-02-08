@@ -45,6 +45,14 @@ public class PatientController {
     }
 
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Patient> findById(@PathVariable Long id) {
+        return patientRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+
     @PutMapping(value = "/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Patient patient) {
         Optional<Patient> savedPatient = patientRepository.findById(id);

@@ -270,4 +270,40 @@ class PatientControllerTest extends AbstractIntegrationTest {
                 }
             }
     }
+
+
+    def 'verify that we can find patient by id'() {
+        given: 'create patients'
+            def patients = [SampleDataProvider.createPatient(cardNumber: '1'), SampleDataProvider.createPatient(cardNumber: '2'),]
+            patients.each { createPatient(it) }
+
+        and: 'take their ids'
+            def patientIds = findPatients().body.content.id
+
+        when: 'send few get requests with id'
+           def patientOne = findPatient(patientIds[0])
+           def patientTwo = findPatient(patientIds[1])
+
+        then: 'patient one and two were founded'
+            noExceptionThrown()
+            patientOne.statusCode == HttpStatus.OK
+            patientTwo.statusCode == HttpStatus.OK
+
+            patientOne.body.cardNumber == '1'
+            patientOne.body.id  == patientIds[0]
+
+            patientTwo.body.cardNumber == '2'
+            patientTwo.body.id  == patientIds[1]
+    }
+
+
+    def 'verify that we will get 404 status if patient was not found by id'() {
+        when: 'send get requests with any id'
+            def response = findPatient(100)
+
+        then: '404 status was received'
+            noExceptionThrown()
+            response.statusCode == HttpStatus.NOT_FOUND
+            !response.body
+    }
 }
