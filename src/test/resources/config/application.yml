@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: test app
+  profiles:
+    active: test
+  datasource:
+    url: jdbc:tc:postgresql://localhost/test
+    username: test
+    password: test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      minimum-idle: 1
+      maximum-pool-size: 5
+      connection-timeout: 10000
+      idle-timeout: 60000
+  jpa:
+    open-in-view: false
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.temp.use_jdbc_metadata_defaults: false
+  flyway:
+    enabled: true
+
