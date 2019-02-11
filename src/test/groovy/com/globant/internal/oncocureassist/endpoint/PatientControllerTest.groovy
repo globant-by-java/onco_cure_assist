@@ -73,6 +73,30 @@ class PatientControllerTest extends AbstractIntegrationTest {
     }
 
 
+    def 'verify that we cannot find deleted patients'() {
+        given: 'create patients'
+            def patients = [
+                    SampleDataProvider.createPatient([fullName: 'patient', cardNumber: '1', deleted: false]),
+                    SampleDataProvider.createPatient([fullName: 'patient', cardNumber: '2', deleted: true])
+            ]
+
+            patients.each {
+                createPatient(it)
+            }
+
+        when: 'send request to get all patients'
+            def response = findPatients([page: 0, size: 2])
+
+        then: 'only not deleted patient was loaded from db'
+            response.statusCode == HttpStatus.OK
+            response.body.size() == 3
+            response.body.totalPages == 1
+            response.body.totalElements == 1
+            response.body.content.size() == 1
+            assert response.body.content.find { it.cardNumber == '1' }
+    }
+
+
     def 'verify that we can delete patient by id'() {
         given: 'create two patients'
             def patientOne = SampleDataProvider.createPatient([fullName: 'patientOne', cardNumber: '1'])
@@ -87,11 +111,12 @@ class PatientControllerTest extends AbstractIntegrationTest {
         when: 'send request to delete one patient'
             deletePatient(patientIds[0])
 
-        then: 'we must have only one patient in db'
+        then: 'we will have one patient with deleted=true'
             patientIds.size() == 2
             def patients = patientRepository.findAll()
-            patients.size() == 1
-            patients[0].id == patientIds[1]
+            patients.size() == 2
+            patients.find { it.deleted && it.id == patientIds[0] }
+            patients.find { !it.deleted && it.id == patientIds[1] }
     }
 
 
@@ -144,6 +169,23 @@ class PatientControllerTest extends AbstractIntegrationTest {
     def 'verify that we cannot update not existing patient'() {
         when: 'send not existing patient to update'
             def response = updatePatient(1, [:])
+
+        then: 'validation error occurred'
+            response.statusCode == HttpStatus.NOT_FOUND
+            !response.body
+    }
+
+
+    def 'verify that we cannot update deleted patient'() {
+        given: 'create deleted patient'
+            def deletedPatient = SampleDataProvider.createPatient(deleted: true)
+            createPatient(deletedPatient)
+
+        and: 'take his id'
+            def patientId = patientRepository.findAll().id[0]
+
+        when: 'send not existing patient to update'
+            def response = updatePatient(patientId, SampleDataProvider.createPatient(deleted: false))
 
         then: 'validation error occurred'
             response.statusCode == HttpStatus.NOT_FOUND
@@ -272,28 +314,27 @@ class PatientControllerTest extends AbstractIntegrationTest {
     }
 
 
-    def 'verify that we can find patient by id'() {
+    def 'verify that we can find only not deleted patient by id'() {
         given: 'create patients'
-            def patients = [SampleDataProvider.createPatient(cardNumber: '1'), SampleDataProvider.createPatient(cardNumber: '2'),]
+            def patients = [SampleDataProvider.createPatient(cardNumber: '1', deleted: true),
+                            SampleDataProvider.createPatient(cardNumber: '2', deleted: false)]
             patients.each { createPatient(it) }
 
         and: 'take their ids'
-            def patientIds = findPatients().body.content.id
+            def patientIds = patientRepository.findAll().id
 
         when: 'send few get requests with id'
-           def patientOne = findPatient(patientIds[0])
-           def patientTwo = findPatient(patientIds[1])
+            def patientOne = findPatient(patientIds[0])
+            def patientTwo = findPatient(patientIds[1])
 
         then: 'patient one and two were founded'
             noExceptionThrown()
-            patientOne.statusCode == HttpStatus.OK
+            patientOne.statusCode == HttpStatus.NOT_FOUND
+            !patientOne.body
+
             patientTwo.statusCode == HttpStatus.OK
-
-            patientOne.body.cardNumber == '1'
-            patientOne.body.id  == patientIds[0]
-
             patientTwo.body.cardNumber == '2'
-            patientTwo.body.id  == patientIds[1]
+            patientTwo.body.id == patientIds[1]
     }
 
 

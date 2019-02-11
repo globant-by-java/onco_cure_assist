@@ -20,6 +20,7 @@ class SampleDataProvider {
                                             classId          : 1,
                                             age              : 20,
                                             ageClass         : 2,
+                                            deleted          : false,
                                             treatment        : [:],
                                             diagnostics      : [:],
                                             geneticPredictors: [:]]

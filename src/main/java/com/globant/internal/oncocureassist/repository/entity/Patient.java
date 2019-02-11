@@ -79,6 +79,9 @@ public class Patient {
     private Integer ageClass;
 
 
+    private Boolean deleted;
+
+
     public Long getId() {
         return id;
     }
@@ -166,6 +169,11 @@ public class Patient {
 
     public GeneticPredictors getGeneticPredictors() {
         return geneticPredictors;
+    }
+
+
+    public Boolean isDeleted() {
+        return deleted;
     }
 
 
@@ -265,5 +273,10 @@ public class Patient {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 }
