@@ -51,4 +51,9 @@ abstract class AbstractIntegrationTest extends Specification {
     def updatePatient(def patientId, def patient) {
         return restTemplate.exchange("/patients/${patientId}", HttpMethod.PUT, new HttpEntity<>(patient), Object)
     }
+
+
+    def findPatient(def patientId) {
+        return restTemplate.getForEntity("/patients/${patientId}", Object)
+    }
 }
