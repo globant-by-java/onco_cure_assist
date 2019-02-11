@@ -2,6 +2,7 @@ package com.globant.internal.oncocureassist.endpoint;
 
 import com.globant.internal.oncocureassist.repository.PatientRepository;
 import com.globant.internal.oncocureassist.repository.entity.Patient;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -40,14 +41,14 @@ public class PatientController {
 
     @GetMapping
     public PageResponse find(@PageableDefault(size = 50) Pageable pageable) {
-        Page<Patient> patients = patientRepository.findAll(pageable);
+        Page<Patient> patients = patientRepository.findAll(Example.of(getPatientCriteria(null)), pageable);
         return new PageResponse<>(patients.getTotalPages(), patients.getTotalElements(), patients.getContent());
     }
 
 
     @GetMapping("/{id}")
     public ResponseEntity<Patient> findById(@PathVariable Long id) {
-        return patientRepository.findById(id)
+        return patientRepository.findOne(Example.of(getPatientCriteria(id)))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -55,7 +56,7 @@ public class PatientController {
 
     @PutMapping(value = "/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Patient patient) {
-        Optional<Patient> savedPatient = patientRepository.findById(id);
+        Optional<Patient> savedPatient = patientRepository.findOne(Example.of(getPatientCriteria(id)));
 
         if (!savedPatient.isPresent()) {
             return ResponseEntity.notFound().build();
@@ -85,5 +86,14 @@ public class PatientController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         patientRepository.deleteById(id);
+    }
+
+
+    private Patient getPatientCriteria(Long id) {
+        Patient patientCriteria = new Patient();
+        patientCriteria.setId(id);
+        patientCriteria.setDeleted(false);
+
+        return patientCriteria;
     }
 }
