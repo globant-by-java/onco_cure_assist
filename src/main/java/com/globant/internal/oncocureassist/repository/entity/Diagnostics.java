@@ -11,7 +11,11 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 
 @Entity
@@ -28,6 +32,7 @@ public class Diagnostics {
     @JoinColumn(name = "patient_id", referencedColumnName = "id")
     private Patient patient;
 
+    @Pattern(regexp = "T[0-4][a-b]?N[0-3]M[0-1]")
     @NotNull
     private String tnm;
 
@@ -40,9 +45,13 @@ public class Diagnostics {
     @Column(name = "distant_metastasis")
     private Integer distantMetastasis;
 
+    @Min(value = 0)
+    @Max(value = 4)
     @Column(name = "tumour_size")
     private Long tumourSize;
 
+    @Min(value = 0)
+    @Max(value = 2)
     private Integer side;
 
     @Column(name = "bronchial_carcinoma")
@@ -70,16 +79,21 @@ public class Diagnostics {
 
     private Boolean symptoms;
 
+    @Min(value = 0)
     private Double vlc;
 
+    @Min(value = 0)
     private Double tvc;
 
+    @Min(value = 0)
     @Column(name = "tiff_number")
     private Double tiffNumber;
 
+    @Min(value = 0)
     @Column(name = "volume_force_exp")
     private Double volumeForceExp;
 
+    @Min(value = 1)
     @Column(name = "heart_rate")
     private Integer heartRate;
 
@@ -95,19 +109,23 @@ public class Diagnostics {
     @Column(name = "onco_anamesys")
     private Boolean oncoAnamesys;
 
+    @Size(max = 16)
     private String stage;
 
     private Boolean complains;
 
     private Integer grade;
 
+    @Min(value = 1)
+    @Max(value = 26)
     @Column(name = "histology_diagnosis")
     private Integer histologyDiagnosis;
 
     private Boolean smoking;
 
+    @Size(max = 64)
     @Column(name = "histology_code")
-    private String hystologyCode;
+    private String histologyCode;
 
     private String t;
 
@@ -320,8 +338,8 @@ public class Diagnostics {
     }
 
 
-    public String getHystologyCode() {
-        return hystologyCode;
+    public String getHistologyCode() {
+        return histologyCode;
     }
 
 
@@ -590,8 +608,8 @@ public class Diagnostics {
     }
 
 
-    public void setHystologyCode(String hystologyCode) {
-        this.hystologyCode = hystologyCode;
+    public void setHistologyCode(String histologyCode) {
+        this.histologyCode = histologyCode;
     }
 
 

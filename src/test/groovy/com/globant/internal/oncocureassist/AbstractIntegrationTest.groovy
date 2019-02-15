@@ -27,12 +27,12 @@ abstract class AbstractIntegrationTest extends Specification {
 
 
     def createPatient(def patient) {
-        return restTemplate.postForEntity('/patients', patient, Object)
+        return restTemplate.postForEntity('/api/patients', patient, Object)
     }
 
 
     def findPatients(Map<String, Object> queryParams) {
-        def url = '/patients'
+        def url = '/api/patients'
         if (queryParams) {
             url += '?'
             queryParams.each {
@@ -44,16 +44,21 @@ abstract class AbstractIntegrationTest extends Specification {
 
 
     def deletePatient(def patientId) {
-        return restTemplate.exchange("/patients/${patientId}", HttpMethod.DELETE, HttpEntity.EMPTY, Object)
+        return restTemplate.exchange("/api/patients/${patientId}", HttpMethod.DELETE, HttpEntity.EMPTY, Object)
     }
 
 
     def updatePatient(def patientId, def patient) {
-        return restTemplate.exchange("/patients/${patientId}", HttpMethod.PUT, new HttpEntity<>(patient), Object)
+        return restTemplate.exchange("/api/patients/${patientId}", HttpMethod.PUT, new HttpEntity<>(patient), Object)
     }
 
 
     def findPatient(def patientId) {
-        return restTemplate.getForEntity("/patients/${patientId}", Object)
+        return restTemplate.getForEntity("/api/patients/${patientId}", Object)
+    }
+
+
+    def getMetadata() {
+        return restTemplate.getForEntity('/api/metadata', Object)
     }
 }
