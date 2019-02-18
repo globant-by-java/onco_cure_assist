@@ -41,4 +41,3 @@ spring:
       hibernate.temp.use_jdbc_metadata_defaults: false
   flyway:
     enabled: true
-

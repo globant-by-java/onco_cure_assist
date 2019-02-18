@@ -1,0 +1,1 @@
+ALTER TABLE patient ALTER COLUMN survival_month DROP NOT NULL;

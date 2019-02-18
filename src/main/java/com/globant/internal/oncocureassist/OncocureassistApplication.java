@@ -9,6 +9,5 @@ public class OncocureassistApplication {
     public static void main(String[] args) {
         SpringApplication.run(OncocureassistApplication.class, args);
     }
-
 }
 

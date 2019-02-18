@@ -10,7 +10,9 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 
 @Entity
@@ -31,6 +33,7 @@ public class Patient {
     @OneToOne(mappedBy = "patient", cascade = CascadeType.ALL)
     private GeneticPredictors geneticPredictors;
 
+    @Size(max = 127)
     @NotNull
     @Column(name = "full_name")
     private String fullName;
@@ -46,11 +49,10 @@ public class Patient {
     @Column(name = "contact_date")
     private LocalDate contactDate;
 
-
-    @NotNull
     @Column(name = "survival_month")
     private Double survivalMonth;
 
+    @Size(max = 64)
     @NotNull
     @Column(name = "patient_card_number", unique = true)
     private String cardNumber;
@@ -60,21 +62,24 @@ public class Patient {
 
     private Boolean employed;
 
+    @Min(value = 1)
     @Column(name = "profession_code")
     private Integer professionCode;
 
+    @Size(max = 512)
     private String address;
 
+    @Size(max = 128)
     private String phone;
 
 
     @Column(name = "class_id")
     private Integer classId;
 
-
+    @NotNull
     private Integer age;
 
-
+    @NotNull
     @Column(name = "age_class")
     private Integer ageClass;
 

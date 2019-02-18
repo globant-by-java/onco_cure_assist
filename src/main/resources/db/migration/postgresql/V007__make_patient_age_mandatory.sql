@@ -1,0 +1,3 @@
+UPDATE patient SET age = -1 WHERE age IS NULL;
+ALTER TABLE patient ALTER COLUMN age SET NOT NULL;
+ALTER TABLE patient ALTER COLUMN age_class SET NOT NULL;

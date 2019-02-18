@@ -1,10 +1,8 @@
 package com.globant.internal.oncocureassist.endpoint;
 
-import org.hibernate.validator.internal.engine.path.NodeImpl;
-import org.hibernate.validator.internal.engine.path.PathImpl;
+import com.globant.internal.oncocureassist.domain.exception.PatientValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.TransactionSystemException;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -12,36 +10,22 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler({ TransactionSystemException.class })
-    public ResponseEntity<Object> handleTransactionSystemException(Exception ex, WebRequest request) throws Exception {
-        Throwable cause = ((TransactionSystemException) ex).getRootCause();
-        if (cause instanceof ConstraintViolationException) {
-            ConstraintViolationException error = (ConstraintViolationException) cause;
-            return handleConstraintViolationException(error, request);
-        }
 
-        return handleException(ex, request);
-    }
-
-
-    private ResponseEntity<Object> handleConstraintViolationException(ConstraintViolationException exc,
-                                                                      WebRequest request) {
-        if (CollectionUtils.isEmpty(exc.getConstraintViolations())) {
+    @ExceptionHandler({ PatientValidationException.class })
+    public ResponseEntity<Object> handlePatientValidationException(PatientValidationException exc, WebRequest request) {
+        if (CollectionUtils.isEmpty(exc.getErrors())) {
             ApiError error = new ApiError(exc.getMessage());
             return handleExceptionInternal(exc, error, null, HttpStatus.BAD_REQUEST, request);
         }
 
-        List<ApiError> errors = exc.getConstraintViolations()
+        List<ApiError> errors = exc.getErrors()
                 .stream()
-                .map(ApiError::new)
+                .map(e -> new ApiError(e.getObject(), e.getField(), e.getCode(), e.getDescription()))
                 .collect(Collectors.toList());
 
         return handleExceptionInternal(exc, errors, null, HttpStatus.BAD_REQUEST, request);
@@ -66,23 +50,6 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
             this.description = description;
             this.object = object;
             this.field = field;
-        }
-
-
-        ApiError(ConstraintViolation<?> cv) {
-            this.object = Optional.ofNullable(cv.getLeafBean()).map(o -> o.getClass().getSimpleName()).orElse(null);
-
-            this.field = Optional.ofNullable(cv.getPropertyPath())
-                    .filter(nodes -> nodes instanceof PathImpl)
-                    .map(nodes -> ((PathImpl) nodes).getLeafNode())
-                    .map(NodeImpl::getName)
-                    .orElse(null);
-
-            this.code = Optional.ofNullable(cv.getConstraintDescriptor())
-                    .map(descriptor -> descriptor.getAnnotation().annotationType().getSimpleName())
-                    .orElse(null);
-
-            this.description = cv.getMessage();
         }
 
 

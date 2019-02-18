@@ -12,7 +12,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "treatment")
@@ -39,21 +41,26 @@ public class Treatment {
     @Column(name = "radiation_therapy_applied")
     private Boolean radiationTherapyApplied;
 
+    @Min(value = 0)
     @Column(name = "surgery_code")
     private Integer surgeryCode;
 
+    @Size(max = 127)
     @Column(name = "surgeon_name")
     private String surgeonName;
 
     @Column(name = "surgery_date")
     private LocalDate surgeryDate;
 
+    @Min(value = 0)
     @Column(name = "first_line_course")
     private Integer firstLineCourse;
 
+    @Min(value = 0)
     @Column(name = "second_line_course")
     private Integer secondLineCourse;
 
+    @Min(value = 0)
     @Column(name = "third_line_course")
     private Integer thirdLineCourse;
 
