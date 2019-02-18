@@ -438,7 +438,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             diagnosticsErrors.find {
                 it.field == 'volumeForceExp' && it.description == 'must be greater than or equal to 0'
             }
-            diagnosticsErrors.find { it.field == 'tnm' && it.description == 'must match "T[0-4][a-b]?N[0-3]M[0-1]"' }
+            diagnosticsErrors.find { it.field == 'tnm' && it.description == 'must match "T(x|[0-4][a-b]?)N(x|[0-3][a-b]?)M[0-1]"' }
 
         where:
             action << ['CREATE', 'UPDATE']
@@ -812,14 +812,14 @@ class PatientControllerTest extends AbstractIntegrationTest {
             savedPatients.size() == 1
             savedPatients[0].survivalMonth == 36
             savedPatients[0].classId == 1
-            savedPatients[0].diagnostics.t == '1'
+            savedPatients[0].diagnostics.t == '1a'
             savedPatients[0].diagnostics.n == '0'
             savedPatients[0].diagnostics.m == '0'
 
         when: 'send request to update patient'
             patient << [contactDate: LocalDate.now().minusMonths(35), age: 17, ageClass: 1]
             patient.treatment << [surgeryDate: LocalDate.now().minusMonths(1)]
-            patient.diagnostics << [tnm: 'T0aN2M1']
+            patient.diagnostics << [tnm: 'T0aNxM1']
             def updateResponse = updatePatient(savedPatients[0].id, patient)
 
         then: 'some fields were populated'
@@ -828,9 +828,8 @@ class PatientControllerTest extends AbstractIntegrationTest {
             updatedPatients.size() == 1
             updatedPatients[0].survivalMonth == 34
             updatedPatients[0].classId == 0
-            updatedPatients[0].diagnostics.t == '0'
-            updatedPatients[0].diagnostics.n == '2'
+            updatedPatients[0].diagnostics.t == '0a'
+            updatedPatients[0].diagnostics.n == 'x'
             updatedPatients[0].diagnostics.m == '1'
-
     }
 }

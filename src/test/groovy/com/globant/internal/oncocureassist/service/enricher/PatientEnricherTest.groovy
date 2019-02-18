@@ -82,12 +82,14 @@ class PatientEnricherTest extends Specification {
             patient.diagnostics.m == m
 
         where:
-            tnm        || t   || n   || m
-            'T1aN0M0'  || '1' || '0' || '0'
-            'T1N0M1'   || '1' || '0' || '1'
-            'T2bN2M1b' || '2' || '2' || '1'
-            'T2bN1M0'  || '2' || '1' || '0'
-            'T4N2M1'   || '4' || '2' || '1'
-            'T4N2M1'   || '4' || '2' || '1'
+            tnm        || t    || n   || m
+            'T1aN0M0'  || '1a' || '0' || '0'
+            'T1N0M1'   || '1'  || '0' || '1'
+            'T2bN2M1b' || '2b' || '2' || '1b'
+            'T2bN1M0'  || '2b' || '1' || '0'
+            'T4N2M1'   || '4'  || '2' || '1'
+            'T4N2M1'   || '4'  || '2' || '1'
+            'T2aNxM0'  || '2a' || 'x' || '0'
+            'T2aNxM1a' || '2a' || 'x' || '1a'
     }
 }

@@ -38,7 +38,7 @@ class SampleDataProvider {
     ]
 
 
-    private static final DEFAULT_DIAGNOSTICS = [tnm                               : 'T1aN0M0',
+    private static final DEFAULT_DIAGNOSTICS = [tnm                               : 'T1aNxM0',
                                                 primaryTumour                     : 1,
                                                 regionalLymphNodes                : 2,
                                                 distantMetastasis                 : 3,
@@ -69,9 +69,9 @@ class SampleDataProvider {
                                                 histologyDiagnosis                : 5,
                                                 smoking                           : true,
                                                 histologyCode                     : 'histologyCode',
-                                                t                                 : '1',
+                                                t                                 : '1a',
                                                 m                                 : '0',
-                                                n                                 : '0',
+                                                n                                 : 'x',
                                                 copd                              : false,
                                                 tuberculomas                      : true,
                                                 chd                               : true,

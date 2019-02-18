@@ -32,7 +32,7 @@ public class Diagnostics {
     @JoinColumn(name = "patient_id", referencedColumnName = "id")
     private Patient patient;
 
-    @Pattern(regexp = "T[0-4][a-b]?N[0-3]M[0-1]")
+    @Pattern(regexp = "T(x|[0-4][a-b]?)N(x|[0-3][a-b]?)M[0-1]")
     @NotNull
     private String tnm;
 

@@ -24,9 +24,14 @@ public class PatientEnricher implements Enricher {
         Optional.ofNullable(patient.getDiagnostics())
                 .ifPresent(diagnostics -> {
                     String tnm = diagnostics.getTnm();
-                    diagnostics.setT(String.valueOf(tnm.charAt(tnm.indexOf("T") + 1)));
-                    diagnostics.setM(String.valueOf(tnm.charAt(tnm.indexOf("M") + 1)));
-                    diagnostics.setN(String.valueOf(tnm.charAt(tnm.indexOf("N") + 1)));
+                    diagnostics.setT(substringBetween(tnm, "T", "N"));
+                    diagnostics.setN(substringBetween(tnm, "N", "M"));
+                    diagnostics.setM(tnm.substring(tnm.indexOf("M") + 1));
                 });
+    }
+
+
+    private String substringBetween(String tnm, String t, String n) {
+        return tnm.substring(tnm.indexOf(t) + 1, tnm.indexOf(n));
     }
 }
