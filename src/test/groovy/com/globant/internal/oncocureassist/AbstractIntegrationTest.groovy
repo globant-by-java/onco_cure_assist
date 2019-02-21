@@ -1,5 +1,7 @@
 package com.globant.internal.oncocureassist
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.globant.internal.oncocureassist.repository.AuditRepository
 import com.globant.internal.oncocureassist.repository.PatientRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -11,18 +13,23 @@ import spock.lang.Ignore
 import spock.lang.Specification
 
 @Ignore
-@ContextConfiguration
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = [OncocureassistApplication])
+@ContextConfiguration(classes = [OncocureassistApplication])
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractIntegrationTest extends Specification {
 
     @Autowired
     private TestRestTemplate restTemplate
     @Autowired
     protected PatientRepository patientRepository
+    @Autowired
+    protected AuditRepository auditRepository
+    @Autowired
+    protected ObjectMapper objectMapper
 
 
     def setup() {
         patientRepository.deleteAll()
+        auditRepository.deleteAll()
     }
 
 

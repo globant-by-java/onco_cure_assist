@@ -1,6 +1,7 @@
 package com.globant.internal.oncocureassist.endpoint
 
 import com.globant.internal.oncocureassist.AbstractIntegrationTest
+import com.globant.internal.oncocureassist.domain.dictionary.AuditAction
 import com.globant.internal.oncocureassist.util.SampleDataProvider
 import org.springframework.http.HttpStatus
 
@@ -438,7 +439,9 @@ class PatientControllerTest extends AbstractIntegrationTest {
             diagnosticsErrors.find {
                 it.field == 'volumeForceExp' && it.description == 'must be greater than or equal to 0'
             }
-            diagnosticsErrors.find { it.field == 'tnm' && it.description == 'must match "T(x|[0-4][a-b]?)N(x|[0-3][a-b]?)M[0-1]"' }
+            diagnosticsErrors.find {
+                it.field == 'tnm' && it.description == 'must match "T(x|[0-4][a-b]?)N(x|[0-3][a-b]?)M[0-1]"'
+            }
 
         where:
             action << ['CREATE', 'UPDATE']
@@ -832,4 +835,119 @@ class PatientControllerTest extends AbstractIntegrationTest {
             updatedPatients[0].diagnostics.n == 'x'
             updatedPatients[0].diagnostics.m == '1'
     }
+
+
+    def 'verify that we add new audit row when patient is created'() {
+        given: 'create patient request'
+            def patient = SampleDataProvider.createPatient()
+
+        when: 'send request to save patient'
+            def response = createPatient(patient)
+
+        then: 'patient was stored into db'
+            response.statusCode == HttpStatus.CREATED
+            !response.body
+            def savedPatients = patientRepository.findAll()
+            savedPatients.size() == 1
+
+        and: 'new audit row was created'
+            def audits = auditRepository.findAll()
+            audits.size() == 1
+            audits[0].entityId == savedPatients[0].id
+            audits[0].action == AuditAction.CREATE
+            audits[0].userName == 'default'
+            audits[0].createdDate.toLocalDate() == LocalDate.now()
+            audits[0].content == objectMapper.writeValueAsString(savedPatients[0])
+
+        when: 'we create one more patient'
+            response = createPatient(SampleDataProvider.createPatient([fullName: 'patient2', cardNumber: 'patient2']))
+
+        then: 'one more new row was added to audit table'
+            response.statusCode == HttpStatus.CREATED
+            !response.body
+            def patients = patientRepository.findAll().sort { it.id }
+            patients.size() == 2
+
+            def savedAudits = auditRepository.findAll().sort { it.id }
+            savedAudits.size() == 2
+            savedAudits[1].entityId == patients[1].id
+            savedAudits[1].action == AuditAction.CREATE
+            savedAudits[1].userName == 'default'
+            savedAudits[1].createdDate.toLocalDate() == LocalDate.now()
+            savedAudits[1].content == objectMapper.writeValueAsString(patients[1])
+    }
+
+
+    def 'verify that we add new audit row when we update existing patient'() {
+        given: 'create patient'
+            def patient = SampleDataProvider.createPatient()
+            createPatient(patient)
+
+        and: 'take patient id'
+            def savedPatient = patientRepository.findAll()[0]
+            assert savedPatient.id
+            assert savedPatient.fullName == 'fullName'
+
+        when: 'send request to update patient'
+            patient << [fullName: 'updated']
+            def response = updatePatient(savedPatient.id, patient)
+
+        then: 'patient was updated'
+            response.statusCode == HttpStatus.NO_CONTENT
+            !response.body
+            def savedPatients = patientRepository.findAll()
+            savedPatients.size() == 1
+
+        and: 'new audit row was created'
+            def audits = auditRepository.findAll().sort { it.id }
+            audits.size() == 2
+
+            def auditCreated = audits.find { it.action == AuditAction.CREATE }
+            auditCreated.entityId == savedPatients[0].id
+            auditCreated.action == AuditAction.CREATE
+            auditCreated.userName == 'default'
+            auditCreated.createdDate.toLocalDate() == LocalDate.now()
+            auditCreated.content != objectMapper.writeValueAsString(savedPatients[0])
+
+            def auditUpdated = audits.find { it.action == AuditAction.UPDATE }
+            auditUpdated.entityId == savedPatients[0].id
+            auditUpdated.action == AuditAction.UPDATE
+            auditUpdated.userName == 'default'
+            auditUpdated.createdDate.toLocalDate() == LocalDate.now()
+            auditUpdated.content == objectMapper.writeValueAsString(savedPatients[0])
+    }
+
+
+    def 'verify that we add new audit row when we delete patient by id'() {
+        given: 'create two patients'
+            def patientOne = SampleDataProvider.createPatient([fullName: 'patientOne', cardNumber: '1'])
+            def patientTwo = SampleDataProvider.createPatient([fullName: 'patientTwo', cardNumber: '2'])
+
+            createPatient(patientOne)
+            createPatient(patientTwo)
+
+        and: 'find patientIds in db'
+            def patientIds = patientRepository.findAll().id
+
+        when: 'send request to delete one patient'
+            deletePatient(patientIds[0])
+
+        then: 'we will have one patient with deleted=true'
+            patientIds.size() == 2
+            def patients = patientRepository.findAll()
+            def deletedPatient = patients.find { it.deleted }
+
+        and: 'new audit row was created'
+            def audits = auditRepository.findAll().sort { it.id }
+            audits.size() == 3
+
+            def auditDeleted = audits.find { it.action == AuditAction.DELETE }
+            auditDeleted.entityId == deletedPatient.id
+            auditDeleted.action == AuditAction.DELETE
+            auditDeleted.userName == 'default'
+            auditDeleted.createdDate.toLocalDate() == LocalDate.now()
+            auditDeleted.content == objectMapper.writeValueAsString(deletedPatient)
+    }
+
+
 }
