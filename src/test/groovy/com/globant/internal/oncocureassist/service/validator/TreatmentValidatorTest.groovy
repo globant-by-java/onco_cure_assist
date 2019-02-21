@@ -1,5 +1,6 @@
 package com.globant.internal.oncocureassist.service.validator
 
+import com.globant.internal.oncocureassist.domain.dictionary.ValidationType
 import com.globant.internal.oncocureassist.repository.entity.Treatment
 import com.globant.internal.oncocureassist.util.SampleDataProvider
 import org.springframework.context.MessageSource
@@ -23,7 +24,7 @@ class TreatmentValidatorTest extends Specification {
             treatment.surgeryDate = null
 
         when:
-            def errors = validator.validate(treatment)
+            def errors = validator.validate(treatment, ValidationType.CREATE)
 
         then:
             1 * jsrValidator.validate(treatment) >> []
@@ -39,7 +40,7 @@ class TreatmentValidatorTest extends Specification {
             treatment.surgeryDate = surgeryDate
 
         when:
-            def errors = validator.validate(treatment)
+            def errors = validator.validate(treatment, ValidationType.CREATE)
 
         then:
             1 * jsrValidator.validate(treatment) >> []
@@ -63,7 +64,7 @@ class TreatmentValidatorTest extends Specification {
             treatment.surgeryDate = LocalDate.now().plusDays(1)
 
         when:
-            def errors = validator.validate(treatment)
+            def errors = validator.validate(treatment, ValidationType.CREATE)
 
         then:
             1 * jsrValidator.validate(treatment) >> []

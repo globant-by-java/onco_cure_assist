@@ -1,5 +1,6 @@
 package com.globant.internal.oncocureassist.service.validator;
 
+import com.globant.internal.oncocureassist.domain.dictionary.ValidationType;
 import com.globant.internal.oncocureassist.domain.exception.ConstraintError;
 import com.globant.internal.oncocureassist.repository.entity.Diagnostics;
 import org.springframework.context.MessageSource;
@@ -18,7 +19,7 @@ class DiagnosticsValidator extends AbstractConstraintValidator<Diagnostics> {
 
 
     @Override
-    public List<ConstraintError> validate(Diagnostics diagnostics) {
+    public List<ConstraintError> validate(Diagnostics diagnostics, ValidationType validationType) {
         return getJsrErrors(diagnostics);
     }
 }

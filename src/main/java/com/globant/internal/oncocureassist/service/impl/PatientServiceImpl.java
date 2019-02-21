@@ -1,6 +1,7 @@
 package com.globant.internal.oncocureassist.service.impl;
 
 import com.globant.internal.oncocureassist.domain.dictionary.AuditAction;
+import com.globant.internal.oncocureassist.domain.dictionary.ValidationType;
 import com.globant.internal.oncocureassist.domain.exception.ConstraintError;
 import com.globant.internal.oncocureassist.domain.exception.PatientValidationException;
 import com.globant.internal.oncocureassist.repository.PatientRepository;
@@ -41,7 +42,7 @@ class PatientServiceImpl implements PatientService {
     @Transactional
     @Override
     public void create(Patient patient) {
-        validatePatient(patient);
+        validatePatient(patient, ValidationType.CREATE);
         patientEnricher.enrich(patient);
         patientRepository.save(patient);
         auditService.add(patient, AuditAction.CREATE);
@@ -71,7 +72,7 @@ class PatientServiceImpl implements PatientService {
             return Optional.empty();
         }
 
-        validatePatient(patient);
+        validatePatient(patient, ValidationType.UPDATE);
         savedPatient.ifPresent(p -> {
             patient.setId(p.getId());
 
@@ -105,8 +106,8 @@ class PatientServiceImpl implements PatientService {
     }
 
 
-    private void validatePatient(Patient patient) {
-        List<ConstraintError> errors = patientValidator.validate(patient);
+    private void validatePatient(Patient patient, ValidationType validationType) {
+        List<ConstraintError> errors = patientValidator.validate(patient, validationType);
         if (!errors.isEmpty()) {
             throw new PatientValidationException(errors);
         }

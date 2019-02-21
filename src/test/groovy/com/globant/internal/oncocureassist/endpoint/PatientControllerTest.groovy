@@ -237,7 +237,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
 
 
     def 'verify that patient birthDate must be before contactDate'() {
-        when: 'send empty request to save or update patient'
+        when: 'send request to save or update patient'
             def response
             if (action == 'CREATE') {
                 response = createPatient(SampleDataProvider.createPatient([birthDate: LocalDate.now().plusDays(3), contactDate: LocalDate.now().minusDays(1)]))
@@ -258,6 +258,38 @@ class PatientControllerTest extends AbstractIntegrationTest {
 
         where:
             action << ['CREATE', 'UPDATE']
+    }
+
+
+    def 'verify that patient cardNumber must be unique for create action'() {
+        given: 'create patient'
+            createPatient(SampleDataProvider.createPatient([cardNumber: 'cardNumber']))
+
+        when: 'send request to save patient with the same cardNumber'
+            def response = createPatient(SampleDataProvider.createPatient([cardNumber: 'cardNumber']))
+
+        then: 'validation error occurred'
+            response.statusCode == HttpStatus.BAD_REQUEST
+            response.body.find {
+                it.field == 'cardNumber' && it.description == 'Patient with card number cardNumber already exists'
+            }
+    }
+
+
+    def 'verify that we do not validate patient cardNumber for update action'() {
+        given: 'create patient'
+            createPatient(SampleDataProvider.createPatient([cardNumber: 'cardNumber']))
+
+        when: 'send request to update patient with the same cardNumber'
+            def patients = patientRepository.findAll()
+            def response = updatePatient(patients[0].id, SampleDataProvider.createPatient([fullName: 'UPDATED', cardNumber: 'cardNumber']))
+
+        then: 'patient was updated'
+            response.statusCode == HttpStatus.NO_CONTENT
+            !response.body
+            def savedPatient = patientRepository.findAll()[0]
+            savedPatient.fullName == 'UPDATED'
+            savedPatient.cardNumber == 'cardNumber'
     }
 
 
