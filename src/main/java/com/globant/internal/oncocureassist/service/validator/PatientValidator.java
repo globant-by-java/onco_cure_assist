@@ -58,7 +58,7 @@ class PatientValidator extends AbstractConstraintValidator<Patient> {
 
         if (validationType == ValidationType.CREATE) {
             Optional.ofNullable(patient.getCardNumber())
-                    .map(patientRepository::findByCardNumber)
+                    .map(patientRepository::findActiveByCardNumber)
                     .ifPresent(p -> {
                         String cardNumber = p.getCardNumber();
                         errors.add(createError("cardNumber", "patient.validation.card.number.not.unique.error", cardNumber));

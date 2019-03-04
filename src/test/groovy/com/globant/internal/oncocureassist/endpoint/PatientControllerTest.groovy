@@ -14,10 +14,10 @@ class PatientControllerTest extends AbstractIntegrationTest {
             def patient = SampleDataProvider.createPatient()
 
         when: 'send request to save patient'
-            def response = createPatient(patient)
+            def response = createOrUpdatePatient(patient)
 
         then: 'patient was stored into db'
-            response.statusCode == HttpStatus.CREATED
+            response.statusCode == HttpStatus.OK
             !response.body
             def savedPatients = patientRepository.findAll()
             savedPatients.size() == 1
@@ -59,7 +59,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             ]
 
             patients.each {
-                createPatient(it)
+                createOrUpdatePatient(it)
             }
 
         when: 'send request to get all patients'
@@ -84,7 +84,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             ]
 
             patients.each {
-                createPatient(it)
+                createOrUpdatePatient(it)
             }
 
         when: 'send request to get all patients'
@@ -105,8 +105,8 @@ class PatientControllerTest extends AbstractIntegrationTest {
             def patientOne = SampleDataProvider.createPatient([fullName: 'patientOne', cardNumber: '1'])
             def patientTwo = SampleDataProvider.createPatient([fullName: 'patientTwo', cardNumber: '2'])
 
-            createPatient(patientOne)
-            createPatient(patientTwo)
+            createOrUpdatePatient(patientOne)
+            createOrUpdatePatient(patientTwo)
 
         and: 'find patientIds in db'
             def patientIds = patientRepository.findAll().id
@@ -126,7 +126,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
     def 'verify that we can update existing patient'() {
         given: 'create patient'
             def patient = SampleDataProvider.createPatient()
-            createPatient(patient)
+            createOrUpdatePatient(patient)
 
         and: 'take patient id'
             def savedPatient = patientRepository.findAll()[0]
@@ -134,11 +134,14 @@ class PatientControllerTest extends AbstractIntegrationTest {
             assert savedPatient.fullName == 'fullName'
 
         when: 'send request to update patient'
-            patient << [fullName: 'updated']
-            def response = updatePatient(savedPatient.id, patient)
+            patient << [id: savedPatient.id, fullName: 'updated', version: savedPatient.version]
+            patient.treatment << [id: savedPatient.treatment.id]
+            patient.diagnostics << [id: savedPatient.diagnostics.id]
+            patient.geneticPredictors << [id: savedPatient.geneticPredictors.id]
+            def response = createOrUpdatePatient(patient)
 
         then: 'patient was updated'
-            response.statusCode == HttpStatus.NO_CONTENT
+            response.statusCode == HttpStatus.OK
             !response.body
             def savedPatients = patientRepository.findAll()
             savedPatients.size() == 1
@@ -150,6 +153,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             patient.remove('treatment')
             patient.remove('diagnostics')
             patient.remove('geneticPredictors')
+            patient << [version: 1]
 
             patient.entrySet().each {
                 assert savedPatients[0][it.key] == it.value
@@ -169,30 +173,22 @@ class PatientControllerTest extends AbstractIntegrationTest {
     }
 
 
-    def 'verify that we cannot update not existing patient'() {
-        when: 'send not existing patient to update'
-            def response = updatePatient(1, [:])
-
-        then: 'validation error occurred'
-            response.statusCode == HttpStatus.NOT_FOUND
-            !response.body
-    }
-
-
-    def 'verify that we cannot update deleted patient'() {
+    def 'verify that card number can be non-unique only for a deleted patient'() {
         given: 'create deleted patient'
-            def deletedPatient = SampleDataProvider.createPatient(deleted: true)
-            createPatient(deletedPatient)
+            def deletedPatient = SampleDataProvider.createPatient(deleted: true, cardNumber: '1000')
+            createOrUpdatePatient(deletedPatient)
 
-        and: 'take his id'
-            def patientId = patientRepository.findAll().id[0]
+        when: 'send new patient with same card number'
+            def patient = SampleDataProvider.createPatient(deleted: false, cardNumber: '1000')
+            def response = createOrUpdatePatient(patient)
 
-        when: 'send not existing patient to update'
-            def response = updatePatient(patientId, SampleDataProvider.createPatient(deleted: false))
-
-        then: 'validation error occurred'
-            response.statusCode == HttpStatus.NOT_FOUND
-            !response.body
+        then: 'new patient was created with same card number'
+            response.statusCode == HttpStatus.OK
+            def patients = patientRepository.findAll().sort { it.id }
+            patients.size() == 2
+            patients[0].deleted
+            !patients[1].deleted
+            patients[0].cardNumber == patients[1].cardNumber
     }
 
 
@@ -200,11 +196,13 @@ class PatientControllerTest extends AbstractIntegrationTest {
         when: 'send empty request to save or update patient'
             def response
             if (action == 'CREATE') {
-                response = createPatient(SampleDataProvider.createEmptyPatient())
+                response = createOrUpdatePatient(SampleDataProvider.createEmptyPatient())
             } else {
-                createPatient(SampleDataProvider.createPatient())
+                createOrUpdatePatient(SampleDataProvider.createPatient())
                 def patientId = patientRepository.findAll()[0].id
-                response = updatePatient(patientId, SampleDataProvider.createEmptyPatient())
+                def emptyPatient = SampleDataProvider.createEmptyPatient()
+                emptyPatient << [id: patientId]
+                response = createOrUpdatePatient(emptyPatient)
             }
 
         then: 'validation error occurred'
@@ -240,11 +238,13 @@ class PatientControllerTest extends AbstractIntegrationTest {
         when: 'send request to save or update patient'
             def response
             if (action == 'CREATE') {
-                response = createPatient(SampleDataProvider.createPatient([birthDate: LocalDate.now().plusDays(3), contactDate: LocalDate.now().minusDays(1)]))
+                response = createOrUpdatePatient(SampleDataProvider.createPatient([birthDate: LocalDate.now().plusDays(3), contactDate: LocalDate.now().minusDays(1)]))
             } else {
-                createPatient(SampleDataProvider.createPatient())
+                createOrUpdatePatient(SampleDataProvider.createPatient())
                 def patientId = patientRepository.findAll()[0].id
-                response = updatePatient(patientId, SampleDataProvider.createPatient([birthDate: LocalDate.now().plusDays(3), contactDate: LocalDate.now().minusDays(1)]))
+                def patient = SampleDataProvider.createPatient([birthDate: LocalDate.now().plusDays(3), contactDate: LocalDate.now().minusDays(1)])
+                patient << [id: patientId]
+                response = createOrUpdatePatient(patient)
             }
 
         then: 'validation error occurred'
@@ -263,10 +263,10 @@ class PatientControllerTest extends AbstractIntegrationTest {
 
     def 'verify that patient cardNumber must be unique for create action'() {
         given: 'create patient'
-            createPatient(SampleDataProvider.createPatient([cardNumber: 'cardNumber']))
+            createOrUpdatePatient(SampleDataProvider.createPatient([cardNumber: 'cardNumber']))
 
         when: 'send request to save patient with the same cardNumber'
-            def response = createPatient(SampleDataProvider.createPatient([cardNumber: 'cardNumber']))
+            def response = createOrUpdatePatient(SampleDataProvider.createPatient([cardNumber: 'cardNumber']))
 
         then: 'validation error occurred'
             response.statusCode == HttpStatus.BAD_REQUEST
@@ -278,14 +278,19 @@ class PatientControllerTest extends AbstractIntegrationTest {
 
     def 'verify that we do not validate patient cardNumber for update action'() {
         given: 'create patient'
-            createPatient(SampleDataProvider.createPatient([cardNumber: 'cardNumber']))
+            createOrUpdatePatient(SampleDataProvider.createPatient([cardNumber: 'cardNumber']))
 
         when: 'send request to update patient with the same cardNumber'
             def patients = patientRepository.findAll()
-            def response = updatePatient(patients[0].id, SampleDataProvider.createPatient([fullName: 'UPDATED', cardNumber: 'cardNumber']))
+            def patient = SampleDataProvider.createPatient([fullName: 'UPDATED', cardNumber: 'cardNumber'])
+            patient << [id: patients[0].id, version: patients[0].version]
+            patient.treatment << [id: patients[0].treatment.id]
+            patient.diagnostics << [id: patients[0].diagnostics.id]
+            patient.geneticPredictors << [id: patients[0].geneticPredictors.id]
+            def response = createOrUpdatePatient(patient)
 
         then: 'patient was updated'
-            response.statusCode == HttpStatus.NO_CONTENT
+            response.statusCode == HttpStatus.OK
             !response.body
             def savedPatient = patientRepository.findAll()[0]
             savedPatient.fullName == 'UPDATED'
@@ -297,11 +302,13 @@ class PatientControllerTest extends AbstractIntegrationTest {
         when: 'send empty request to save or update patient'
             def response
             if (action == 'CREATE') {
-                response = createPatient(SampleDataProvider.createEmptyPatient())
+                response = createOrUpdatePatient(SampleDataProvider.createEmptyPatient())
             } else {
-                createPatient(SampleDataProvider.createPatient())
+                createOrUpdatePatient(SampleDataProvider.createPatient())
                 def patientId = patientRepository.findAll()[0].id
-                response = updatePatient(patientId, SampleDataProvider.createEmptyPatient())
+                def patient = SampleDataProvider.createEmptyPatient()
+                patient << [id: patientId]
+                response = createOrUpdatePatient(patient)
             }
 
         then: 'validation error occurred'
@@ -322,11 +329,13 @@ class PatientControllerTest extends AbstractIntegrationTest {
         when: 'send empty request to save or update patient'
             def response
             if (action == 'CREATE') {
-                response = createPatient(SampleDataProvider.createEmptyPatient())
+                response = createOrUpdatePatient(SampleDataProvider.createEmptyPatient())
             } else {
-                createPatient(SampleDataProvider.createPatient())
+                createOrUpdatePatient(SampleDataProvider.createPatient())
                 def patientId = patientRepository.findAll()[0].id
-                response = updatePatient(patientId, SampleDataProvider.createEmptyPatient())
+                def patient = SampleDataProvider.createEmptyPatient()
+                patient << [id: patientId]
+                response = createOrUpdatePatient(patient)
             }
 
         then: 'validation error occurred'
@@ -352,11 +361,12 @@ class PatientControllerTest extends AbstractIntegrationTest {
         when: 'send not valid request to save or update patient'
             def response
             if (action == 'CREATE') {
-                response = createPatient(patient)
+                response = createOrUpdatePatient(patient)
             } else {
-                createPatient(SampleDataProvider.createPatient())
+                createOrUpdatePatient(SampleDataProvider.createPatient())
                 def patientId = patientRepository.findAll()[0].id
-                response = updatePatient(patientId, patient)
+                patient << [id: patientId]
+                response = createOrUpdatePatient(patient)
             }
 
         then: 'validation error occurred'
@@ -392,11 +402,12 @@ class PatientControllerTest extends AbstractIntegrationTest {
         when: 'send not valid request to save or update patient'
             def response
             if (action == 'CREATE') {
-                response = createPatient(patient)
+                response = createOrUpdatePatient(patient)
             } else {
-                createPatient(SampleDataProvider.createPatient())
+                createOrUpdatePatient(SampleDataProvider.createPatient())
                 def patientId = patientRepository.findAll()[0].id
-                response = updatePatient(patientId, patient)
+                patient << [id: patientId]
+                response = createOrUpdatePatient(patient)
             }
 
         then: 'validation error occurred'
@@ -443,11 +454,12 @@ class PatientControllerTest extends AbstractIntegrationTest {
         when: 'send not valid request to save or update patient'
             def response
             if (action == 'CREATE') {
-                response = createPatient(patient)
+                response = createOrUpdatePatient(patient)
             } else {
-                createPatient(SampleDataProvider.createPatient())
+                createOrUpdatePatient(SampleDataProvider.createPatient())
                 def patientId = patientRepository.findAll()[0].id
-                response = updatePatient(patientId, patient)
+                patient << [id: patientId]
+                response = createOrUpdatePatient(patient)
             }
 
         then: 'validation error occurred'
@@ -529,11 +541,12 @@ class PatientControllerTest extends AbstractIntegrationTest {
         when: 'send not valid request to save or update patient'
             def response
             if (action == 'CREATE') {
-                response = createPatient(patient)
+                response = createOrUpdatePatient(patient)
             } else {
-                createPatient(SampleDataProvider.createPatient())
+                createOrUpdatePatient(SampleDataProvider.createPatient())
                 def patientId = patientRepository.findAll()[0].id
-                response = updatePatient(patientId, patient)
+                patient << [id: patientId]
+                response = createOrUpdatePatient(patient)
             }
 
         then: 'validation error occurred'
@@ -673,7 +686,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             def patient = SampleDataProvider.createEmptyPatient()
 
         when: 'send not valid request to save patient'
-            def response = createPatient(patient)
+            def response = createOrUpdatePatient(patient)
 
 
         then: 'validation error occurred'
@@ -687,14 +700,15 @@ class PatientControllerTest extends AbstractIntegrationTest {
     def 'verify that we cannot update patient without required fields'() {
         given: 'create patient'
             def patient = SampleDataProvider.createPatient()
-            createPatient(patient)
+            createOrUpdatePatient(patient)
             def patients = patientRepository.findAll()
 
         and: 'create empty patient'
             def emptyPatient = SampleDataProvider.createEmptyPatient()
 
         when: 'send empty request to update existing patient'
-            def response = updatePatient(patients[0].id, emptyPatient)
+            emptyPatient << [id: patients[0].id,]
+            def response = createOrUpdatePatient(emptyPatient)
 
         then: 'validation error occurred'
             response.statusCode == HttpStatus.BAD_REQUEST
@@ -740,7 +754,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             treatment << [chemotherapyApplied: null]
 
         when: 'send request with not valid treatment'
-            def response = createPatient(patient)
+            def response = createOrUpdatePatient(patient)
 
         then: 'validation error occurred'
             response.statusCode == HttpStatus.BAD_REQUEST
@@ -758,7 +772,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             patient.diagnostics << [tnm: null]
 
         when: 'send request with not valid diagnostics'
-            def response = createPatient(patient)
+            def response = createOrUpdatePatient(patient)
 
         then: 'validation error occurred'
             response.statusCode == HttpStatus.BAD_REQUEST
@@ -776,10 +790,10 @@ class PatientControllerTest extends AbstractIntegrationTest {
             patient.geneticPredictors = [:]
 
         when: 'send request with empty geneticPredictors'
-            def response = createPatient(patient)
+            def response = createOrUpdatePatient(patient)
 
         then: 'patient was created with empty geneticPredictors'
-            response.statusCode == HttpStatus.CREATED
+            response.statusCode == HttpStatus.OK
             !response.body
             def savedPatients = patientRepository.findAll()
             savedPatients.size() == 1
@@ -797,7 +811,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
         given: 'create patients'
             def patients = [SampleDataProvider.createPatient(cardNumber: '1', deleted: true),
                             SampleDataProvider.createPatient(cardNumber: '2', deleted: false)]
-            patients.each { createPatient(it) }
+            patients.each { createOrUpdatePatient(it) }
 
         and: 'take their ids'
             def patientIds = patientRepository.findAll().id
@@ -839,10 +853,10 @@ class PatientControllerTest extends AbstractIntegrationTest {
             patient.diagnostics << [t: null, n: null, m: null]
 
         when: 'send request to save patient'
-            def saveResponse = createPatient(patient)
+            def saveResponse = createOrUpdatePatient(patient)
 
         then: 'some fields were populated'
-            saveResponse.statusCode == HttpStatus.CREATED
+            saveResponse.statusCode == HttpStatus.OK
             def savedPatients = patientRepository.findAll()
             savedPatients.size() == 1
             savedPatients[0].survivalMonth == 36
@@ -852,13 +866,15 @@ class PatientControllerTest extends AbstractIntegrationTest {
             savedPatients[0].diagnostics.m == '0'
 
         when: 'send request to update patient'
-            patient << [contactDate: LocalDate.now().minusMonths(35), age: 17, ageClass: 1]
-            patient.treatment << [surgeryDate: LocalDate.now().minusMonths(1)]
-            patient.diagnostics << [tnm: 'T0aNxM1']
-            def updateResponse = updatePatient(savedPatients[0].id, patient)
+            patient << [id: savedPatients[0].id, contactDate: LocalDate.now().minusMonths(35), age: 17, ageClass: 1, version: savedPatients[0].version]
+            patient.treatment << [id: savedPatients[0].treatment.id, surgeryDate: LocalDate.now().minusMonths(1)]
+            patient.diagnostics << [id: savedPatients[0].diagnostics.id, tnm: 'T0aNxM1']
+            patient.geneticPredictors << [id: savedPatients[0].geneticPredictors.id]
+
+            def updateResponse = createOrUpdatePatient(patient)
 
         then: 'some fields were populated'
-            updateResponse.statusCode == HttpStatus.NO_CONTENT
+            updateResponse.statusCode == HttpStatus.OK
             def updatedPatients = patientRepository.findAll()
             updatedPatients.size() == 1
             updatedPatients[0].survivalMonth == 34
@@ -874,10 +890,10 @@ class PatientControllerTest extends AbstractIntegrationTest {
             def patient = SampleDataProvider.createPatient()
 
         when: 'send request to save patient'
-            def response = createPatient(patient)
+            def response = createOrUpdatePatient(patient)
 
         then: 'patient was stored into db'
-            response.statusCode == HttpStatus.CREATED
+            response.statusCode == HttpStatus.OK
             !response.body
             def savedPatients = patientRepository.findAll()
             savedPatients.size() == 1
@@ -892,10 +908,10 @@ class PatientControllerTest extends AbstractIntegrationTest {
             audits[0].content == objectMapper.writeValueAsString(savedPatients[0])
 
         when: 'we create one more patient'
-            response = createPatient(SampleDataProvider.createPatient([fullName: 'patient2', cardNumber: 'patient2']))
+            response = createOrUpdatePatient(SampleDataProvider.createPatient([fullName: 'patient2', cardNumber: 'patient2']))
 
         then: 'one more new row was added to audit table'
-            response.statusCode == HttpStatus.CREATED
+            response.statusCode == HttpStatus.OK
             !response.body
             def patients = patientRepository.findAll().sort { it.id }
             patients.size() == 2
@@ -913,40 +929,43 @@ class PatientControllerTest extends AbstractIntegrationTest {
     def 'verify that we add new audit row when we update existing patient'() {
         given: 'create patient'
             def patient = SampleDataProvider.createPatient()
-            createPatient(patient)
+            createOrUpdatePatient(patient)
 
         and: 'take patient id'
-            def savedPatient = patientRepository.findAll()[0]
-            assert savedPatient.id
-            assert savedPatient.fullName == 'fullName'
+            def createdPatient = patientRepository.findAll()[0]
+            assert createdPatient.id
+            assert createdPatient.fullName == 'fullName'
 
         when: 'send request to update patient'
-            patient << [fullName: 'updated']
-            def response = updatePatient(savedPatient.id, patient)
+            patient << [id: createdPatient.id, fullName: 'updated', version: createdPatient.version]
+            patient.treatment << [id: createdPatient.treatment.id]
+            patient.diagnostics << [id: createdPatient.diagnostics.id]
+            patient.geneticPredictors << [id: createdPatient.geneticPredictors.id]
+            def response = createOrUpdatePatient(patient)
 
         then: 'patient was updated'
-            response.statusCode == HttpStatus.NO_CONTENT
+            response.statusCode == HttpStatus.OK
             !response.body
-            def savedPatients = patientRepository.findAll()
-            savedPatients.size() == 1
+            def updatedPatients = patientRepository.findAll()
+            updatedPatients.size() == 1
 
         and: 'new audit row was created'
             def audits = auditRepository.findAll().sort { it.id }
             audits.size() == 2
 
             def auditCreated = audits.find { it.action == AuditAction.CREATE }
-            auditCreated.entityId == savedPatients[0].id
+            auditCreated.entityId == updatedPatients[0].id
             auditCreated.action == AuditAction.CREATE
             auditCreated.userName == 'default'
             auditCreated.createdDate.toLocalDate() == LocalDate.now()
-            auditCreated.content != objectMapper.writeValueAsString(savedPatients[0])
+            auditCreated.content == objectMapper.writeValueAsString(createdPatient)
 
             def auditUpdated = audits.find { it.action == AuditAction.UPDATE }
-            auditUpdated.entityId == savedPatients[0].id
+            auditUpdated.entityId == updatedPatients[0].id
             auditUpdated.action == AuditAction.UPDATE
             auditUpdated.userName == 'default'
             auditUpdated.createdDate.toLocalDate() == LocalDate.now()
-            auditUpdated.content == objectMapper.writeValueAsString(savedPatients[0])
+            auditUpdated.content.contains('"fullName":"updated"')
     }
 
 
@@ -955,8 +974,8 @@ class PatientControllerTest extends AbstractIntegrationTest {
             def patientOne = SampleDataProvider.createPatient([fullName: 'patientOne', cardNumber: '1'])
             def patientTwo = SampleDataProvider.createPatient([fullName: 'patientTwo', cardNumber: '2'])
 
-            createPatient(patientOne)
-            createPatient(patientTwo)
+            createOrUpdatePatient(patientOne)
+            createOrUpdatePatient(patientTwo)
 
         and: 'find patientIds in db'
             def patientIds = patientRepository.findAll().id
@@ -978,8 +997,32 @@ class PatientControllerTest extends AbstractIntegrationTest {
             auditDeleted.action == AuditAction.DELETE
             auditDeleted.userName == 'default'
             auditDeleted.createdDate.toLocalDate() == LocalDate.now()
-            auditDeleted.content == objectMapper.writeValueAsString(deletedPatient)
+            auditDeleted.content.contains('"deleted":true')
     }
 
 
+    def 'verify that only first user can update patient'() {
+        given: 'create patient'
+            def patientOne = SampleDataProvider.createPatient()
+            createOrUpdatePatient(patientOne)
+
+        and: 'find patient in db'
+            def savedPatient = patientRepository.findAll()[0]
+
+        when: 'first user send request to delete patient'
+            deletePatient(savedPatient.id)
+
+        then: 'patient was deleted and version was incremented'
+            def patients = patientRepository.findAll()
+            def deletedPatient = patients.find { it.deleted }
+            deletedPatient.version == 1
+
+        when: 'second user send request to update patient with version=0'
+            savedPatient.treatment.surgeryApplied = false
+            def response = createOrUpdatePatient(savedPatient)
+
+        then: 'optimistic lock exception has occurred'
+            response.statusCode == HttpStatus.CONFLICT
+            response.body.description == 'Patient was already updated by another person. Please refresh the page'
+    }
 }

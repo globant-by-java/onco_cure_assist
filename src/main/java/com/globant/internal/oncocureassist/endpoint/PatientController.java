@@ -11,13 +11,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/api/patients")
@@ -31,10 +28,10 @@ public class PatientController {
     }
 
 
-    @ResponseStatus(value = HttpStatus.CREATED)
+    @ResponseStatus(value = HttpStatus.OK)
     @PostMapping
     public void create(@RequestBody Patient patient) {
-        patientService.create(patient);
+        patientService.createOrUpdate(patient);
     }
 
 
@@ -50,17 +47,6 @@ public class PatientController {
         return patientService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-
-    @PutMapping(value = "/{id}")
-    public ResponseEntity<?> update(@PathVariable Long id, @RequestBody Patient patient) {
-        Optional<Patient> updated = patientService.update(id, patient);
-        if (!updated.isPresent()) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.noContent().build();
     }
 
 

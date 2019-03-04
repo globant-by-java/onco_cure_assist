@@ -41,11 +41,18 @@ class PatientServiceImpl implements PatientService {
 
     @Transactional
     @Override
-    public void create(Patient patient) {
-        validatePatient(patient, ValidationType.CREATE);
+    public void createOrUpdate(Patient patient) {
+        boolean patientExists = Optional.ofNullable(patient.getId())
+                .flatMap(id -> patientRepository.findOne(notDeleted(id)))
+                .isPresent();
+
+        ValidationType validationType = patientExists ? ValidationType.UPDATE : ValidationType.CREATE;
+        AuditAction auditAction = patientExists ? AuditAction.UPDATE : AuditAction.CREATE;
+
+        validatePatient(patient, validationType);
         patientEnricher.enrich(patient);
         patientRepository.save(patient);
-        auditService.add(patient, AuditAction.CREATE);
+        auditService.add(patient, auditAction);
     }
 
 
@@ -60,37 +67,6 @@ class PatientServiceImpl implements PatientService {
     @Override
     public Optional<Patient> findById(Long id) {
         return patientRepository.findOne(notDeleted(id));
-    }
-
-
-    @Transactional
-    @Override
-    public Optional<Patient> update(Long id, Patient patient) {
-        Optional<Patient> savedPatient = patientRepository.findOne(notDeleted(id));
-
-        if (!savedPatient.isPresent()) {
-            return Optional.empty();
-        }
-
-        validatePatient(patient, ValidationType.UPDATE);
-        savedPatient.ifPresent(p -> {
-            patient.setId(p.getId());
-
-            Optional.ofNullable(p.getTreatment())
-                    .ifPresent(obj -> patient.getTreatment().setId(obj.getId()));
-
-            Optional.ofNullable(p.getDiagnostics())
-                    .ifPresent(obj -> patient.getDiagnostics().setId(obj.getId()));
-
-            Optional.ofNullable(p.getGeneticPredictors())
-                    .ifPresent(obj -> patient.getGeneticPredictors().setId(obj.getId()));
-
-            patientEnricher.enrich(patient);
-            patientRepository.save(patient);
-            auditService.add(patient, AuditAction.UPDATE);
-        });
-
-        return savedPatient;
     }
 
 

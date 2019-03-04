@@ -8,13 +8,11 @@ import java.util.Optional;
 
 public interface PatientService {
 
-    void create(Patient patient);
+    void createOrUpdate(Patient patient);
 
     Page<Patient> find(Pageable pageable);
 
     Optional<Patient> findById(Long id);
-
-    Optional<Patient> update(Long id, Patient patient);
 
     void delete(Long id);
 }

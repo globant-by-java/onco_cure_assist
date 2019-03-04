@@ -5,5 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PatientRepository extends JpaRepository<Patient, Long> {
 
-    Patient findByCardNumber(String cardNumber);
+    default Patient findActiveByCardNumber(String cardNumber) {
+        return findByCardNumberAndDeleted(cardNumber, false);
+    }
+
+    Patient findByCardNumberAndDeleted(String cardNumber, boolean deleted);
 }

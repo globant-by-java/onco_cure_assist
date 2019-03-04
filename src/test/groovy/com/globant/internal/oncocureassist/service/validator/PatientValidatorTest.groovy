@@ -237,7 +237,7 @@ class PatientValidatorTest extends Specification {
 
         then:
             1 * jsrValidator.validate(patient) >> []
-            0 * patientRepository.findByCardNumber(_)
+            0 * patientRepository.findActiveByCardNumber(_)
             !errors
     }
 
@@ -255,7 +255,7 @@ class PatientValidatorTest extends Specification {
 
         then:
             1 * jsrValidator.validate(patient) >> []
-            1 * patientRepository.findByCardNumber('120') >> new Patient()
+            1 * patientRepository.findActiveByCardNumber('120') >> new Patient()
             1 * messageSource.getMessage('patient.validation.card.number.not.unique.error', _, getLocale()) >> 'error'
             !errors[0].code
             errors[0].field == 'cardNumber'
@@ -277,7 +277,7 @@ class PatientValidatorTest extends Specification {
 
         then:
             1 * jsrValidator.validate(patient) >> []
-            1 * patientRepository.findByCardNumber('120') >> null
+            1 * patientRepository.findActiveByCardNumber('120') >> null
             0 * messageSource.getMessage('patient.validation.card.number.not.unique.error', _, getLocale()) >> 'error'
             !errors
     }

@@ -33,7 +33,7 @@ abstract class AbstractIntegrationTest extends Specification {
     }
 
 
-    def createPatient(def patient) {
+    def createOrUpdatePatient(def patient) {
         return restTemplate.postForEntity('/api/patients', patient, Object)
     }
 
@@ -52,11 +52,6 @@ abstract class AbstractIntegrationTest extends Specification {
 
     def deletePatient(def patientId) {
         return restTemplate.exchange("/api/patients/${patientId}", HttpMethod.DELETE, HttpEntity.EMPTY, Object)
-    }
-
-
-    def updatePatient(def patientId, def patient) {
-        return restTemplate.exchange("/api/patients/${patientId}", HttpMethod.PUT, new HttpEntity<>(patient), Object)
     }
 
 
