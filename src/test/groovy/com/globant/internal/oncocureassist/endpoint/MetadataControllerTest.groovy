@@ -43,7 +43,7 @@ class MetadataControllerTest extends AbstractIntegrationTest {
             genotypeMetadata.KRAS_2_EX_TUMOR == [[code: null, name: ''], [code: 'NO', name: 'no'], [code: 'C.35G/A', name: 'c.35G/A'], [code: 'C.37G/T', name: 'c.37G/T'], [code: 'C.34G/T', name: 'c.34G/T']]
             genotypeMetadata.EGFR_20_NORM == [[code: null, name: ''], [code: 'NO', name: 'no'], [code: 'C.2361G/A', name: 'c.2361G/A']]
             genotypeMetadata.MMP_21575 == [[code: null, name: ''], [code: 'G/G', name: 'G/G'], [code: 'G/A', name: 'G/A'], [code: 'A/A', name: 'A/A']]
-            genotypeMetadata.MMP_91562 == [[code: null, name: ''], [code: 'G/G', name: 'G/G'], [code: 'G/A', name: 'G/A'], [code: 'A/A', name: 'A/A']]
+            genotypeMetadata.MMP_91562 == [[code: null, name: ''], [code: 'C/C', name: 'C/C'], [code: 'C/T', name: 'C/T']]
             genotypeMetadata.NAT_KPN == [[code: null, name: ''], [code: 'C/C', name: 'C/C'], [code: 'C/T', name: 'C/T'], [code: 'T/T', name: 'T/T']]
             genotypeMetadata.PIK_3_CA_20_EX == [[code: null, name: ''], [code: 'NO', name: 'no']]
             genotypeMetadata.TGF_R_206 == [[code: null, name: ''], [code: 'C/C', name: 'C/C'], [code: 'C/T', name: 'C/T'], [code: 'T/T', name: 'T/T']]

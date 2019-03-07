@@ -23,7 +23,7 @@ public enum Genotype {
     KDR_1719("kdr1719", Arrays.asList("T/T", "T/A", "A/A")),
     KDR_906("kdr906", Arrays.asList("T/T", "T/C", "C/C")),
     MMP_92660("mmp92660", Arrays.asList("A/A", "G/A", "G/G")),
-    MMP_91562("mmp91562", Arrays.asList("G/G", "G/A", "A/A")),
+    MMP_91562("mmp91562", Arrays.asList("C/C", "C/T")),
     MMP_2735("mmp2735", Arrays.asList("C/C", "C/T", "T/T")),
     MMP_21575("mmp21575", Arrays.asList("G/G", "G/A", "A/A")),
     DNMT_149("dnmt149", Arrays.asList("C/C", "C/T", "T/T")),

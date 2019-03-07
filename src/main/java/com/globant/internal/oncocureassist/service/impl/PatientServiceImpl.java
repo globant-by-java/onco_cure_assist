@@ -1,12 +1,17 @@
 package com.globant.internal.oncocureassist.service.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.globant.internal.oncocureassist.domain.dictionary.AuditAction;
 import com.globant.internal.oncocureassist.domain.dictionary.ValidationType;
 import com.globant.internal.oncocureassist.domain.exception.ConstraintError;
 import com.globant.internal.oncocureassist.domain.exception.PatientValidationException;
+import com.globant.internal.oncocureassist.domain.model.PatientClassifyModel;
+import com.globant.internal.oncocureassist.mapper.PatientClassifyModelMapper;
 import com.globant.internal.oncocureassist.repository.PatientRepository;
 import com.globant.internal.oncocureassist.repository.entity.Patient;
 import com.globant.internal.oncocureassist.service.AuditService;
+import com.globant.internal.oncocureassist.service.ClassifierService;
 import com.globant.internal.oncocureassist.service.PatientService;
 import com.globant.internal.oncocureassist.service.enricher.Enricher;
 import com.globant.internal.oncocureassist.service.validator.ConstraintValidator;
@@ -17,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -26,16 +32,25 @@ class PatientServiceImpl implements PatientService {
     private final AuditService auditService;
     private final ConstraintValidator<Patient> patientValidator;
     private final Enricher patientEnricher;
+    private final ClassifierService classifierService;
+    private final PatientClassifyModelMapper patientClassifyModelMapper;
+    private final ObjectMapper objectMapper;
 
 
     PatientServiceImpl(PatientRepository patientRepository,
                        AuditService auditService,
                        ConstraintValidator<Patient> patientValidator,
-                       Enricher patientEnricher) {
+                       Enricher patientEnricher,
+                       ClassifierService classifierService,
+                       PatientClassifyModelMapper patientClassifyModelMapper,
+                       ObjectMapper objectMapper) {
         this.patientRepository = patientRepository;
         this.auditService = auditService;
         this.patientValidator = patientValidator;
         this.patientEnricher = patientEnricher;
+        this.classifierService = classifierService;
+        this.patientClassifyModelMapper = patientClassifyModelMapper;
+        this.objectMapper = objectMapper;
     }
 
 
@@ -79,6 +94,16 @@ class PatientServiceImpl implements PatientService {
                     patientRepository.save(patient);
                     auditService.add(patient, AuditAction.DELETE);
                 });
+    }
+
+
+    @Override
+    public int classifyPatient(Patient patient, Integer version) {
+        PatientClassifyModel classifyModel = patientClassifyModelMapper.toModel(patient);
+        TypeReference<Map<String, String>> type = new TypeReference<Map<String, String>>() {};
+        Map<String, String> modelMap = objectMapper.convertValue(classifyModel, type);
+
+        return (int) classifierService.classify(modelMap, version);
     }
 
 

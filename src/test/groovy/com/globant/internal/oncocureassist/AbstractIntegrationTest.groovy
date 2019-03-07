@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.test.context.ContextConfiguration
 import spock.lang.Ignore
@@ -60,7 +61,24 @@ abstract class AbstractIntegrationTest extends Specification {
     }
 
 
+    def classifyPatient(def patient, Map<String, Object> queryParams) {
+        def url = '/api/patients/classify'
+        if (queryParams) {
+            url += '?'
+            queryParams.each {
+                url += it.key + '=' + it.value + '&'
+            }
+        }
+        return restTemplate.postForEntity(url, patient, Object)
+    }
+
+
     def getMetadata() {
         return restTemplate.getForEntity('/api/metadata', Object)
+    }
+
+
+    def createClassifier() {
+        return restTemplate.postForEntity('/api/classifiers', HttpHeaders.EMPTY, Object)
     }
 }

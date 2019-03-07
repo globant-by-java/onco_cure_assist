@@ -44,7 +44,7 @@ class TreatmentValidatorTest extends Specification {
 
         then:
             1 * jsrValidator.validate(treatment) >> []
-            errorMessageCount * messageSource.getMessage('validation.invalid.date.range.error', [LocalDate.of(1990, 1, 1), LocalDate.now()], getLocale()) >> 'error'
+            errorMessageCount * messageSource.getMessage('validation.invalid.date.range.error', [LocalDate.of(1900, 1, 1), LocalDate.now()], getLocale()) >> 'error'
             0 * _
             noExceptionThrown()
             errors.size() == errorMessageCount
@@ -53,7 +53,7 @@ class TreatmentValidatorTest extends Specification {
             surgeryDate                 || errorMessageCount
             LocalDate.of(1990, 1, 1)    || 0
             LocalDate.now()             || 0
-            LocalDate.of(1989, 12, 31)  || 1
+            LocalDate.of(1899, 12, 31)  || 1
             LocalDate.now().plusDays(1) || 1
     }
 
@@ -68,7 +68,7 @@ class TreatmentValidatorTest extends Specification {
 
         then:
             1 * jsrValidator.validate(treatment) >> []
-            1 * messageSource.getMessage('validation.invalid.date.range.error', [LocalDate.of(1990, 1, 1), LocalDate.now()], getLocale()) >> 'error'
+            1 * messageSource.getMessage('validation.invalid.date.range.error', [LocalDate.of(1900, 1, 1), LocalDate.now()], getLocale()) >> 'error'
             0 * _
             noExceptionThrown()
             errors.size() == 1

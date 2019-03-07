@@ -148,9 +148,8 @@ class GeneticPredictorsValidatorTest extends Specification {
             'fake'               | 'mmp92660'        || 1
 
             null                 | 'mmp91562'        || 0
-            'A/A'                | 'mmp91562'        || 0
-            'G/A'                | 'mmp91562'        || 0
-            'G/G'                | 'mmp91562'        || 0
+            'C/C'                | 'mmp91562'        || 0
+            'C/T'                | 'mmp91562'        || 0
             'fake'               | 'mmp91562'        || 1
 
             null                 | 'mmp2735'         || 0
