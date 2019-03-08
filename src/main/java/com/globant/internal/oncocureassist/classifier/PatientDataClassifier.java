@@ -2,7 +2,9 @@ package com.globant.internal.oncocureassist.classifier;
 
 import static weka.core.converters.ConverterUtils.DataSource;
 
+import com.globant.internal.oncocureassist.domain.dictionary.FileTemplate;
 import com.globant.internal.oncocureassist.domain.exception.ClassifierExecutionException;
+import com.globant.internal.oncocureassist.repository.FileRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import weka.classifiers.Classifier;
@@ -12,7 +14,6 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 
-import java.io.File;
 import java.util.Enumeration;
 import java.util.Map;
 
@@ -20,17 +21,11 @@ public class PatientDataClassifier implements DataClassifier {
 
     private static final Logger log = LoggerFactory.getLogger(PatientDataClassifier.class);
 
-    private final String fileDirectory;
-    private final String templateFileName;
-    private final String classifierFileName;
+    private final FileRepository wekaFileRepository;
 
 
-    public PatientDataClassifier(String fileDirectory,
-                                 String templateFileName,
-                                 String classifierFileName) {
-        this.fileDirectory = fileDirectory;
-        this.templateFileName = templateFileName;
-        this.classifierFileName = classifierFileName;
+    public PatientDataClassifier(FileRepository wekaFileRepository) {
+        this.wekaFileRepository = wekaFileRepository;
     }
 
 
@@ -48,8 +43,8 @@ public class PatientDataClassifier implements DataClassifier {
     private double calculate(Map<String, String> model, Integer version) throws Exception {
         log.info("Calculate classId using classifier with version {}", version);
         Instance newData = makeInstance(model, version);
-        String filename = fileDirectory + version + File.separator + classifierFileName;
-        Classifier cls = (Classifier) SerializationHelper.read(filename);
+        String classifierName = wekaFileRepository.getFileName(FileTemplate.CLASSIFIER, version);
+        Classifier cls = (Classifier) SerializationHelper.read(classifierName);
 
         double classId = cls.classifyInstance(newData);
         log.info("Calculated value: {}", classId);
@@ -59,8 +54,7 @@ public class PatientDataClassifier implements DataClassifier {
 
 
     private Instance makeInstance(Map<String, String> model, Integer version) throws Exception {
-        String filename = fileDirectory + version + File.separator + templateFileName;
-        Instances template = DataSource.read(filename);
+        Instances template = DataSource.read(wekaFileRepository.getFileName(FileTemplate.TEMPLATE, version));
         Instance newData = new DenseInstance(template.numAttributes());
         newData.setDataset(template);
 

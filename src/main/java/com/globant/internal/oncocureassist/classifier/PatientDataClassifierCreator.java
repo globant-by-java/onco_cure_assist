@@ -1,7 +1,9 @@
 package com.globant.internal.oncocureassist.classifier;
 
+import com.globant.internal.oncocureassist.domain.dictionary.FileTemplate;
 import com.globant.internal.oncocureassist.domain.exception.ClassifierCreationException;
 import com.globant.internal.oncocureassist.domain.model.ClassifierModel;
+import com.globant.internal.oncocureassist.repository.FileRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import weka.classifiers.Classifier;
@@ -10,12 +12,9 @@ import weka.core.SerializationHelper;
 import weka.experiment.InstanceQuery;
 import weka.filters.Filter;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Optional;
 
 public class PatientDataClassifierCreator implements DataClassifierCreator {
 
@@ -24,54 +23,43 @@ public class PatientDataClassifierCreator implements DataClassifierCreator {
     private final Classifier classifier;
     private final InstanceQuery instanceQuery;
     private final Filter filter;
-    private final File wekaDir;
-    private final String templateFileName;
-    private final String classifierFileName;
+    private final FileRepository wekaFileRepository;
 
 
     public PatientDataClassifierCreator(Classifier classifier,
                                         InstanceQuery instanceQuery,
                                         Filter filter,
-                                        File wekaDir,
-                                        String templateFileName,
-                                        String classifierFileName) {
+                                        FileRepository wekaFileRepository) {
         this.classifier = classifier;
         this.instanceQuery = instanceQuery;
         this.filter = filter;
-        this.wekaDir = wekaDir;
-        this.templateFileName = templateFileName;
-        this.classifierFileName = classifierFileName;
+        this.wekaFileRepository = wekaFileRepository;
     }
 
 
     public ClassifierModel create(Integer version) {
-        String classifierDirPath = wekaDir.getAbsolutePath() + File.separator + version;
+        File classifierDir = null;
         try {
+            classifierDir = wekaFileRepository.createDirectory(FileTemplate.EMPTY, version);
             log.info("Create directory for classifier with version {}", version);
-            Path directory = createDirectory(classifierDirPath);
-            return createClassifier(directory.toFile());
+            return createClassifier(version, classifierDir);
         } catch (Exception exc) {
             log.error("Error while creating a new classifier", exc);
-            new File(classifierDirPath).delete();
+            Optional.ofNullable(classifierDir).ifPresent(File::delete);
             throw new ClassifierCreationException();
         }
     }
 
 
-    private Path createDirectory(String classifierDirPath) throws IOException {
-        return Files.createDirectories(Paths.get(classifierDirPath));
-    }
-
-
-    private ClassifierModel createClassifier(File directory) throws Exception {
+    private ClassifierModel createClassifier(Integer version, File classifierDir) throws Exception {
         Instances data = getData();
         log.info("Train new classifier on {} data", data.size());
         classifier.buildClassifier(data);
 
-        saveClassifier(directory);
-        saveTemplate(directory, data);
+        saveClassifier(version);
+        saveTemplate(data, version);
 
-        return new ClassifierModel(directory);
+        return new ClassifierModel(classifierDir);
     }
 
 
@@ -84,20 +72,15 @@ public class PatientDataClassifierCreator implements DataClassifierCreator {
     }
 
 
-    private void saveClassifier(File directory) throws Exception {
-        String classifierFile = directory.getAbsolutePath() + File.separator + classifierFileName;
+    private void saveClassifier(Integer version) throws Exception {
+        String classifierFile = wekaFileRepository.getFileName(FileTemplate.CLASSIFIER, version);
         log.info("Create classifier {}", classifierFile);
         SerializationHelper.write(classifierFile, classifier);
     }
 
 
-    private void saveTemplate(File directory, Instances data) throws Exception {
-        String templateFile = directory.getAbsolutePath() + File.separator + templateFileName;
+    private void saveTemplate(Instances data, Integer version) throws IOException {
         data.clear();
-        log.info("Create template {}", templateFile);
-
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(templateFile))) {
-            writer.write(data.toString());
-        }
+        wekaFileRepository.write(data.toString(), FileTemplate.TEMPLATE, version);
     }
 }

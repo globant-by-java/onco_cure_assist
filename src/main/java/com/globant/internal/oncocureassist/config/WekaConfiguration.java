@@ -4,6 +4,8 @@ import com.globant.internal.oncocureassist.classifier.DataClassifier;
 import com.globant.internal.oncocureassist.classifier.DataClassifierCreator;
 import com.globant.internal.oncocureassist.classifier.PatientDataClassifier;
 import com.globant.internal.oncocureassist.classifier.PatientDataClassifierCreator;
+import com.globant.internal.oncocureassist.repository.FileRepository;
+import com.globant.internal.oncocureassist.repository.WekaFileRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
@@ -22,10 +24,6 @@ import java.nio.charset.Charset;
 @Configuration
 class WekaConfiguration {
 
-    private static final String WEKA_DIR = System.getProperty("user.home") + File.separator + "weka";
-    private static final String TEMPLATE_FILE_NAME = "patient_template.arff";
-    private static final String CLASSIFIER_FILE_NAME = "patient_classifier.model";
-
     private final Resource wekaProperties;
     private final Resource wekaSql;
     private final DataSourceProperties dataSourceProperties;
@@ -42,14 +40,13 @@ class WekaConfiguration {
 
     @Bean
     DataClassifier patientDataClassifier() {
-        return new PatientDataClassifier(WEKA_DIR, TEMPLATE_FILE_NAME, CLASSIFIER_FILE_NAME);
+        return new PatientDataClassifier(fileRepository());
     }
 
 
     @Bean
     DataClassifierCreator patientDataClassifierCreator() throws Exception {
-        return new PatientDataClassifierCreator(j48(), patientDataQuery(), numericToNominalFilter(),
-                wekaDir(), TEMPLATE_FILE_NAME, CLASSIFIER_FILE_NAME);
+        return new PatientDataClassifierCreator(j48(), patientDataQuery(), numericToNominalFilter(), fileRepository());
     }
 
 
@@ -86,8 +83,14 @@ class WekaConfiguration {
 
 
     @Bean
+    FileRepository fileRepository() {
+        return new WekaFileRepository(wekaDir());
+    }
+
+
+    @Bean
     File wekaDir() {
-        File dir = new File(WEKA_DIR);
+        File dir = new File(System.getProperty("user.home") + File.separator + "weka");
         dir.mkdirs();
 
         return dir;
