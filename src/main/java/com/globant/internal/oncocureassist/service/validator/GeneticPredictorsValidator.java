@@ -2,6 +2,7 @@ package com.globant.internal.oncocureassist.service.validator;
 
 import com.globant.internal.oncocureassist.domain.dictionary.AcetylationType;
 import com.globant.internal.oncocureassist.domain.dictionary.Genotype;
+import com.globant.internal.oncocureassist.domain.dictionary.ValidationType;
 import com.globant.internal.oncocureassist.domain.exception.ConstraintError;
 import com.globant.internal.oncocureassist.repository.entity.GeneticPredictors;
 import org.springframework.context.MessageSource;
@@ -34,7 +35,7 @@ class GeneticPredictorsValidator extends AbstractConstraintValidator<GeneticPred
 
 
     @Override
-    public List<ConstraintError> validate(GeneticPredictors geneticPredictors) {
+    public List<ConstraintError> validate(GeneticPredictors geneticPredictors, ValidationType validationType) {
         List<ConstraintError> errors = new ArrayList<>();
 
         String defaultErrorMessage = "genetic.predictions.field.validation.error";

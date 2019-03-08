@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Version;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -54,7 +55,7 @@ public class Patient {
 
     @Size(max = 64)
     @NotNull
-    @Column(name = "patient_card_number", unique = true)
+    @Column(name = "patient_card_number")
     private String cardNumber;
 
     @NotNull
@@ -83,8 +84,11 @@ public class Patient {
     @Column(name = "age_class")
     private Integer ageClass;
 
-
     private Boolean deleted;
+
+    @Column(name = "version", insertable = false)
+    @Version
+    private Long version;
 
 
     public Long getId() {
@@ -283,5 +287,15 @@ public class Patient {
 
     public void setDeleted(Boolean deleted) {
         this.deleted = deleted;
+    }
+
+
+    public Long getVersion() {
+        return version;
+    }
+
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

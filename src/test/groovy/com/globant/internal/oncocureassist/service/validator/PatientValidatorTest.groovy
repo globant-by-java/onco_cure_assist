@@ -1,6 +1,8 @@
 package com.globant.internal.oncocureassist.service.validator
 
 import com.globant.internal.oncocureassist.domain.dictionary.AgeClass
+import com.globant.internal.oncocureassist.domain.dictionary.ValidationType
+import com.globant.internal.oncocureassist.repository.PatientRepository
 import com.globant.internal.oncocureassist.repository.entity.Patient
 import com.globant.internal.oncocureassist.util.SampleDataProvider
 import org.springframework.context.MessageSource
@@ -19,7 +21,9 @@ class PatientValidatorTest extends Specification {
     def treatmentValidator = Mock(ConstraintValidator)
     def diagnosticsValidator = Mock(ConstraintValidator)
     def geneticPredictorsValidator = Mock(ConstraintValidator)
-    def validator = new PatientValidator(jsrValidator, messageSource, treatmentValidator, diagnosticsValidator, geneticPredictorsValidator)
+    def patientRepository = Mock(PatientRepository)
+    def validator = new PatientValidator(jsrValidator, messageSource, treatmentValidator, diagnosticsValidator,
+            geneticPredictorsValidator, patientRepository)
 
 
     def 'verify that we do not validate treatment, diagnostics, geneticPredictors if they are null'() {
@@ -29,15 +33,16 @@ class PatientValidatorTest extends Specification {
             patient.diagnostics = diagnostics
             patient.geneticPredictors = geneticPredictors
             patient = patient as Patient
+            def validationType = ValidationType.UPDATE
 
         when:
-            def errors = validator.validate(patient)
+            def errors = validator.validate(patient, validationType)
 
         then:
             1 * jsrValidator.validate(patient) >> []
-            callCount * treatmentValidator.validate(patient.treatment) >> []
-            callCount * diagnosticsValidator.validate(patient.diagnostics) >> []
-            callCount * geneticPredictorsValidator.validate(patient.geneticPredictors) >> []
+            callCount * treatmentValidator.validate(patient.treatment, validationType) >> []
+            callCount * diagnosticsValidator.validate(patient.diagnostics, validationType) >> []
+            callCount * geneticPredictorsValidator.validate(patient.geneticPredictors, validationType) >> []
             0 * _
             noExceptionThrown()
             errors.isEmpty()
@@ -57,9 +62,10 @@ class PatientValidatorTest extends Specification {
             patient.treatment = null
             patient.diagnostics = null
             patient.geneticPredictors = null
+            def validationType = ValidationType.UPDATE
 
         when:
-            def errors = validator.validate(patient)
+            def errors = validator.validate(patient, validationType)
 
         then:
             1 * jsrValidator.validate(patient) >> []
@@ -111,7 +117,7 @@ class PatientValidatorTest extends Specification {
             patient.geneticPredictors = null
 
         when:
-            def errors = validator.validate(patient)
+            def errors = validator.validate(patient, ValidationType.UPDATE)
 
         then:
             1 * jsrValidator.validate(patient) >> []
@@ -144,7 +150,7 @@ class PatientValidatorTest extends Specification {
             patient.geneticPredictors = null
 
         when:
-            def errors = validator.validate(patient)
+            def errors = validator.validate(patient, ValidationType.UPDATE)
 
         then:
             1 * jsrValidator.validate(patient) >> []
@@ -195,7 +201,7 @@ class PatientValidatorTest extends Specification {
             patient.geneticPredictors = null
 
         when:
-            def errors = validator.validate(patient)
+            def errors = validator.validate(patient, ValidationType.UPDATE)
 
         then:
             1 * jsrValidator.validate(patient) >> []
@@ -215,5 +221,64 @@ class PatientValidatorTest extends Specification {
             birthDate                     | contactDate                   || errorMessageCount
             LocalDate.now()               | LocalDate.now()               || 1
             LocalDate.now().minusYears(1) | LocalDate.now().minusYears(2) || 1
+    }
+
+
+    def 'validate that we do not have exception when cardNumber is null'() {
+        given:
+            def patient = SampleDataProvider.createPatient() as Patient
+            patient.cardNumber = null
+            patient.treatment = null
+            patient.diagnostics = null
+            patient.geneticPredictors = null
+
+        when:
+            def errors = validator.validate(patient, ValidationType.CREATE)
+
+        then:
+            1 * jsrValidator.validate(patient) >> []
+            0 * patientRepository.findActiveByCardNumber(_)
+            !errors
+    }
+
+
+    def 'validate that we add new error if patient is not unique by cardNumber'() {
+        given:
+            def patient = SampleDataProvider.createPatient() as Patient
+            patient.cardNumber = '120'
+            patient.treatment = null
+            patient.diagnostics = null
+            patient.geneticPredictors = null
+
+        when:
+            def errors = validator.validate(patient, ValidationType.CREATE)
+
+        then:
+            1 * jsrValidator.validate(patient) >> []
+            1 * patientRepository.findActiveByCardNumber('120') >> new Patient()
+            1 * messageSource.getMessage('patient.validation.card.number.not.unique.error', _, getLocale()) >> 'error'
+            !errors[0].code
+            errors[0].field == 'cardNumber'
+            errors[0].object == 'Patient'
+            errors[0].description == 'error'
+    }
+
+
+    def 'validate that we do not add new error if patient is unique by cardNumber'() {
+        given:
+            def patient = SampleDataProvider.createPatient() as Patient
+            patient.cardNumber = '120'
+            patient.treatment = null
+            patient.diagnostics = null
+            patient.geneticPredictors = null
+
+        when:
+            def errors = validator.validate(patient, ValidationType.CREATE)
+
+        then:
+            1 * jsrValidator.validate(patient) >> []
+            1 * patientRepository.findActiveByCardNumber('120') >> null
+            0 * messageSource.getMessage('patient.validation.card.number.not.unique.error', _, getLocale()) >> 'error'
+            !errors
     }
 }

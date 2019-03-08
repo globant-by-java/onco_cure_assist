@@ -1,6 +1,10 @@
 package com.globant.internal.oncocureassist.endpoint;
 
+import static org.springframework.context.i18n.LocaleContextHolder.getLocale;
+
 import com.globant.internal.oncocureassist.domain.exception.PatientValidationException;
+import org.hibernate.StaleObjectStateException;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -14,6 +18,13 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ExceptionTranslator extends ResponseEntityExceptionHandler {
+
+    private final MessageSource messageSource;
+
+
+    public ExceptionTranslator(MessageSource messageSource) {
+        this.messageSource = messageSource;
+    }
 
 
     @ExceptionHandler({ PatientValidationException.class })
@@ -29,6 +40,13 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
                 .collect(Collectors.toList());
 
         return handleExceptionInternal(exc, errors, null, HttpStatus.BAD_REQUEST, request);
+    }
+
+
+    @ExceptionHandler
+    public ResponseEntity<Object> handleStaleObjectStateException(StaleObjectStateException exc, WebRequest request) {
+        ApiError error = new ApiError(messageSource.getMessage("patient.optimistic.lock.error", null, getLocale()));
+        return handleExceptionInternal(exc, error, null, HttpStatus.CONFLICT, request);
     }
 
 

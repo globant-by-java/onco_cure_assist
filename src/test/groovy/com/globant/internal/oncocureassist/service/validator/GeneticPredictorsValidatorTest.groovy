@@ -1,5 +1,6 @@
 package com.globant.internal.oncocureassist.service.validator
 
+import com.globant.internal.oncocureassist.domain.dictionary.ValidationType
 import com.globant.internal.oncocureassist.repository.entity.GeneticPredictors
 import com.globant.internal.oncocureassist.util.SampleDataProvider
 import org.springframework.context.MessageSource
@@ -23,7 +24,7 @@ class GeneticPredictorsValidatorTest extends Specification {
             geneticPredictors[fieldName] = fieldValue
 
         when:
-            def errors = validator.validate(geneticPredictors)
+            def errors = validator.validate(geneticPredictors, ValidationType.CREATE)
 
         then:
             errorMessageCount * messageSource.getMessage('genetic.predictions.field.validation.error', _, LocaleContextHolder.getLocale()) >> 'error'

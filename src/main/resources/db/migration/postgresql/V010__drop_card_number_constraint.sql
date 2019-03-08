@@ -1,0 +1,1 @@
+DROP INDEX patient_card_pk;
