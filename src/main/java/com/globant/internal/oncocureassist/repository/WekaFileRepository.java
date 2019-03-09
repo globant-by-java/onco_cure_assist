@@ -7,6 +7,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 
 public class WekaFileRepository implements FileRepository {
@@ -33,10 +37,18 @@ public class WekaFileRepository implements FileRepository {
 
 
     @Override
-    public void write(String data, FileTemplate fileTemplate, Integer version) throws IOException {
+    public void save(String data, FileTemplate fileTemplate, Integer version) throws IOException {
         String fileName = getFileName(fileTemplate, version);
         try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(fileName))) {
             writer.write(data);
         }
+    }
+
+
+    @Override
+    public List<File> findAll() {
+        return Optional.ofNullable(wekaDir.listFiles(File::isDirectory))
+                .map(Arrays::asList)
+                .orElseGet(Collections::emptyList);
     }
 }

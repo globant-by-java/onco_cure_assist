@@ -3,15 +3,14 @@ package com.globant.internal.oncocureassist.service.impl;
 import com.globant.internal.oncocureassist.classifier.DataClassifier;
 import com.globant.internal.oncocureassist.classifier.DataClassifierCreator;
 import com.globant.internal.oncocureassist.domain.model.ClassifierModel;
+import com.globant.internal.oncocureassist.repository.FileRepository;
 import com.globant.internal.oncocureassist.service.ClassifierService;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,23 +18,23 @@ class ClassifierServiceImpl implements ClassifierService {
 
     private final DataClassifier patientModelClassifier;
     private final DataClassifierCreator patientClassifierCreator;
-    private final File wekaDir;
+    private final FileRepository fileRepository;
 
 
     ClassifierServiceImpl(DataClassifier patientModelClassifier,
                           DataClassifierCreator patientClassifierCreator,
-                          File wekaDir) {
+                          FileRepository fileRepository) {
         this.patientModelClassifier = patientModelClassifier;
         this.patientClassifierCreator = patientClassifierCreator;
-        this.wekaDir = wekaDir;
+        this.fileRepository = fileRepository;
     }
 
 
     @Override
     public List<ClassifierModel> findAll() {
-        File[] children = Optional.ofNullable(wekaDir.listFiles(File::isDirectory)).orElseGet(() -> new File[0]);
+        List<File> files = fileRepository.findAll();
 
-        return Arrays.stream(children)
+        return files.stream()
                 .map(ClassifierModel::new)
                 .sorted(Comparator.comparing(ClassifierModel::getVersion))
                 .collect(Collectors.toList());

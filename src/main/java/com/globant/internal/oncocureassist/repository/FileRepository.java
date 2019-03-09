@@ -4,6 +4,7 @@ import com.globant.internal.oncocureassist.domain.dictionary.FileTemplate;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public interface FileRepository {
 
@@ -11,5 +12,7 @@ public interface FileRepository {
 
     File createDirectory(FileTemplate fileTemplate, Integer path) throws IOException;
 
-    void write(String data, FileTemplate fileTemplate, Integer version) throws IOException;
+    void save(String data, FileTemplate fileTemplate, Integer version) throws IOException;
+
+    List<File> findAll();
 }

@@ -81,6 +81,6 @@ public class PatientDataClassifierCreator implements DataClassifierCreator {
 
     private void saveTemplate(Instances data, Integer version) throws IOException {
         data.clear();
-        wekaFileRepository.write(data.toString(), FileTemplate.TEMPLATE, version);
+        wekaFileRepository.save(data.toString(), FileTemplate.TEMPLATE, version);
     }
 }
