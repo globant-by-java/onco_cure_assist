@@ -4,6 +4,7 @@ import static weka.core.converters.ConverterUtils.DataSource;
 
 import com.globant.internal.oncocureassist.domain.dictionary.FileTemplate;
 import com.globant.internal.oncocureassist.domain.exception.ClassifierExecutionException;
+import com.globant.internal.oncocureassist.domain.exception.ClassifierValidationException;
 import com.globant.internal.oncocureassist.repository.FileRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,9 @@ public class PatientDataClassifier implements DataClassifier {
     public double classify(Map<String, String> model, Integer version) {
         try {
             return calculate(model, version);
+        } catch (ClassifierValidationException exc) {
+            log.error("Validation error during classify patient with version " + version, exc);
+            throw new RuntimeException();
         } catch (Exception exc) {
             log.error("Error while classify a patient with version " + version, exc);
             throw new ClassifierExecutionException();
@@ -58,10 +62,21 @@ public class PatientDataClassifier implements DataClassifier {
         Instance newData = new DenseInstance(template.numAttributes());
         newData.setDataset(template);
 
+        boolean sizeEqual = template.numAttributes() == model.size();
+        if (!sizeEqual) {
+            throw new ClassifierValidationException("Patient model size and classifier attributes size are different");
+        }
+
         Enumeration<Attribute> attributes = template.enumerateAttributes();
         while (attributes.hasMoreElements()) {
             Attribute attribute = attributes.nextElement();
-            String value = model.get(attribute.name());
+            String attributeName = attribute.name();
+
+            if (!model.containsKey(attributeName)) {
+                throw new ClassifierValidationException("Patient model does not contain classifier attribute");
+            }
+
+            String value = model.get(attributeName);
             if (value != null) {
                 newData.setValue(attribute, value);
             }

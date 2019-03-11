@@ -3,6 +3,7 @@ package com.globant.internal.oncocureassist
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.globant.internal.oncocureassist.repository.AuditRepository
 import com.globant.internal.oncocureassist.repository.PatientRepository
+import com.globant.internal.oncocureassist.util.TestConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
@@ -14,7 +15,7 @@ import spock.lang.Ignore
 import spock.lang.Specification
 
 @Ignore
-@ContextConfiguration(classes = [OncocureassistApplication])
+@ContextConfiguration(classes = [OncocureassistApplication, TestConfig])
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractIntegrationTest extends Specification {
 

@@ -115,7 +115,7 @@ class SampleDataProvider {
                                                      egfr20Tumor    : 'c.2361A/A',
                                                      egfr20Norm     : 'c.2361G/A',
                                                      egfr21Tumor    : 'L858R',
-                                                     egfr21norm     : '2508C/T',
+                                                     egfr21Norm     : '2508C/T',
                                                      egfr21Blood    : '2508C/T',
                                                      tgf509         : 'C/C',
                                                      tgf25Codon     : 'G/C',

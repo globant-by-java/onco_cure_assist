@@ -517,7 +517,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
                                           egfr20Tumor    : 'egfr20Tumor',
                                           egfr20Norm     : 'egfr20Norm',
                                           egfr21Tumor    : 'egfr21Tumor',
-                                          egfr21norm     : 'egfr21norm',
+                                          egfr21Norm     : 'egfr21Norm',
                                           egfr21Blood    : 'egfr21Blood',
                                           tgf509         : 'tgf509',
                                           tgf25Codon     : 'tgf25Codon',
@@ -619,7 +619,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
                 it.field == 'egfr21Tumor' && it.description == 'The code was specified incorrectly. Expected values [no, 2508C/T, L858R]'
             }
             geneticPredictorsErrors.find {
-                it.field == 'egfr21norm' && it.description == 'The code was specified incorrectly. Expected values [no, 2508C/T]'
+                it.field == 'egfr21Norm' && it.description == 'The code was specified incorrectly. Expected values [no, 2508C/T]'
             }
             geneticPredictorsErrors.find {
                 it.field == 'egfr21Blood' && it.description == 'The code was specified incorrectly. Expected values [no, 2508C/T]'

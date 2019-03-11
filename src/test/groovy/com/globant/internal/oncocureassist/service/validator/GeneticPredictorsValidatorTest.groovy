@@ -232,10 +232,10 @@ class GeneticPredictorsValidatorTest extends Specification {
             'L858R'              | 'egfr21Tumor'     || 0
             'fake'               | 'egfr21Tumor'     || 1
 
-            null                 | 'egfr21norm'      || 0
-            'no'                 | 'egfr21norm'      || 0
-            '2508C/T'            | 'egfr21norm'      || 0
-            'fake'               | 'egfr21norm'      || 1
+            null                 | 'egfr21Norm'      || 0
+            'no'                 | 'egfr21Norm'      || 0
+            '2508C/T'            | 'egfr21Norm'      || 0
+            'fake'               | 'egfr21Norm'      || 1
 
             null                 | 'egfr21Blood'     || 0
             'no'                 | 'egfr21Blood'     || 0

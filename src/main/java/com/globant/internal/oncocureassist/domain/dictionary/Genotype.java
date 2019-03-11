@@ -38,7 +38,7 @@ public enum Genotype {
     EGFR_20_TUMOR("egfr20Tumor", Arrays.asList("no", "c.2361A/A", "c.2361G/G", "c.2361G/A", "p.A763_Y764insFQEA")),
     EGFR_20_NORM("egfr20Norm", Arrays.asList("no", "c.2361G/A")),
     EGFR_21_TUMOR("egfr21Tumor", Arrays.asList("no", "2508C/T", "L858R")),
-    EGFR_21_NORM("egfr21norm", Arrays.asList("no", "2508C/T")),
+    EGFR_21_NORM("egfr21Norm", Arrays.asList("no", "2508C/T")),
     EGFR_21_BLOOD("egfr21Blood", Arrays.asList("no", "2508C/T")),
     KRAS_2_EX_TUMOR("kras2exTumor", Arrays.asList("no", "c.35G/A", "c.37G/T", "c.34G/T")),
     KRAS_2_EX_NORM("kras2exNorm", Collections.singletonList("no")),

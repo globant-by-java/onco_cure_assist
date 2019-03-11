@@ -83,7 +83,7 @@ public class GeneticPredictors {
     private String egfr21Tumor;
 
     @Column(name = "egfr_21_norm")
-    private String egfr21norm;
+    private String egfr21Norm;
 
     @Column(name = "egfr_21_blood")
     private String egfr21Blood;
@@ -248,8 +248,8 @@ public class GeneticPredictors {
     }
 
 
-    public String getEgfr21norm() {
-        return egfr21norm;
+    public String getEgfr21Norm() {
+        return egfr21Norm;
     }
 
 
@@ -453,8 +453,8 @@ public class GeneticPredictors {
     }
 
 
-    public void setEgfr21norm(String egfr21norm) {
-        this.egfr21norm = egfr21norm;
+    public void setEgfr21Norm(String egfr21Norm) {
+        this.egfr21Norm = egfr21Norm;
     }
 
 

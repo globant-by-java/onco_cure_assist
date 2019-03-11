@@ -67,7 +67,7 @@ public interface PatientClassifyModelMapper {
     @Mapping(target = "egfr20Tumor", source = "geneticPredictors.egfr20Tumor")
     @Mapping(target = "egfr20Norm", source = "geneticPredictors.egfr20Norm")
     @Mapping(target = "egfr21Tumor", source = "geneticPredictors.egfr21Tumor")
-    @Mapping(target = "egfr21norm", source = "geneticPredictors.egfr21norm")
+    @Mapping(target = "egfr21Norm", source = "geneticPredictors.egfr21Norm")
     @Mapping(target = "egfr21Blood", source = "geneticPredictors.egfr21Blood")
     @Mapping(target = "tgf509", source = "geneticPredictors.tgf509")
     @Mapping(target = "tgf25Codon", source = "geneticPredictors.tgf25Codon")
