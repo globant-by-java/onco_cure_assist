@@ -4,9 +4,13 @@ import com.globant.internal.oncocureassist.domain.dictionary.FileTemplate;
 import com.globant.internal.oncocureassist.domain.exception.ClassifierCreationException;
 import com.globant.internal.oncocureassist.domain.model.ClassifierModel;
 import com.globant.internal.oncocureassist.repository.FileRepository;
+import guru.nidi.graphviz.engine.Format;
+import guru.nidi.graphviz.engine.Graphviz;
+import guru.nidi.graphviz.engine.GraphvizJdkEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import weka.classifiers.Classifier;
+import weka.classifiers.trees.J48;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 import weka.experiment.InstanceQuery;
@@ -34,6 +38,7 @@ public class PatientDataClassifierCreator implements DataClassifierCreator {
         this.instanceQuery = instanceQuery;
         this.filter = filter;
         this.wekaFileRepository = wekaFileRepository;
+        Graphviz.useEngine(new GraphvizJdkEngine());
     }
 
 
@@ -58,8 +63,15 @@ public class PatientDataClassifierCreator implements DataClassifierCreator {
 
         saveClassifier(version);
         saveTemplate(data, version);
+        saveDecisionTree(classifier, version);
 
         return new ClassifierModel(classifierDir);
+    }
+
+
+    private void saveDecisionTree(Classifier cls, Integer version) throws Exception {
+        String decisionTreeFile = wekaFileRepository.getFileName(FileTemplate.DECISION_TREE, version);
+        Graphviz.fromString(((J48) cls).graph()).render(Format.PNG).toFile(new File(decisionTreeFile));
     }
 
 

@@ -55,9 +55,10 @@ class ClassifierControllerTest extends AbstractIntegrationTest {
 
             def files = createdClassifier.list()
             files != null
-            files.size() == 2
+            files.size() == 3
             files.find { it == 'patient_template.arff' }
             files.find { it == 'patient_classifier.model' }
+            files.find { it == 'decision_tree.png' }
     }
 
 
