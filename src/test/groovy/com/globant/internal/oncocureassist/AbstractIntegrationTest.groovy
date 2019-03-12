@@ -62,15 +62,8 @@ abstract class AbstractIntegrationTest extends Specification {
     }
 
 
-    def classifyPatient(def patient, Map<String, Object> queryParams) {
-        def url = '/api/patients/classify'
-        if (queryParams) {
-            url += '?'
-            queryParams.each {
-                url += it.key + '=' + it.value + '&'
-            }
-        }
-        return restTemplate.postForEntity(url, patient, Object)
+    def classifyPatient(def patient, def version) {
+        return restTemplate.postForEntity("/api/patients/classify/version/${version}", patient, Object)
     }
 
 
@@ -81,5 +74,15 @@ abstract class AbstractIntegrationTest extends Specification {
 
     def createClassifier() {
         return restTemplate.postForEntity('/api/classifiers', HttpHeaders.EMPTY, Object)
+    }
+
+
+    def findAllClassifiers() {
+        return restTemplate.getForEntity('/api/classifiers', Object)
+    }
+
+
+    def findClassifierByVersion(def version) {
+        return restTemplate.getForEntity("/api/classifiers/${version}", Object)
     }
 }

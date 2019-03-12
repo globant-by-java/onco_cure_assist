@@ -69,12 +69,6 @@ public class PatientDataClassifierCreator implements DataClassifierCreator {
     }
 
 
-    private void saveDecisionTree(Classifier cls, Integer version) throws Exception {
-        String decisionTreeFile = wekaFileRepository.getFileName(FileTemplate.DECISION_TREE, version);
-        Graphviz.fromString(((J48) cls).graph()).render(Format.PNG).toFile(new File(decisionTreeFile));
-    }
-
-
     private Instances getData() throws Exception {
         Instances data = instanceQuery.retrieveInstances();
         data.setClassIndex(data.numAttributes() - 1);
@@ -94,5 +88,11 @@ public class PatientDataClassifierCreator implements DataClassifierCreator {
     private void saveTemplate(Instances data, Integer version) throws IOException {
         data.clear();
         wekaFileRepository.save(data.toString(), FileTemplate.TEMPLATE, version);
+    }
+
+
+    private void saveDecisionTree(Classifier cls, Integer version) throws Exception {
+        String decisionTreeFile = wekaFileRepository.getFileName(FileTemplate.DECISION_TREE, version);
+        Graphviz.fromString(((J48) cls).graph()).render(Format.PNG).toFile(new File(decisionTreeFile));
     }
 }

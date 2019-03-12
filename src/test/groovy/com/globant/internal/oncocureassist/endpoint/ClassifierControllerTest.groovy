@@ -78,4 +78,47 @@ class ClassifierControllerTest extends AbstractIntegrationTest {
             !response.body.object
             wekaDir.listFiles().size() == actualSize
     }
+
+
+    def 'verify that we can get all classifiers'() {
+        given: 'get all files from weka directory'
+            def actualClassifiers = wekaDir.listFiles().sort { it.name as Integer }
+
+        when: 'send request to find all classifiers'
+            def response = findAllClassifiers()
+
+        then: 'compare actual and received results'
+            noExceptionThrown()
+            response.statusCode == HttpStatus.OK
+
+            actualClassifiers.size() == response.body.size()
+            response.body.eachWithIndex { classifier, index ->
+                assert actualClassifiers[index].name == classifier.version as String
+                assert classifier.decisionTreePath == actualClassifiers[index].absolutePath + File.separator + 'decision_tree.png'
+            }
+    }
+
+
+    def 'verify that we can get classifier by version'() {
+        when: 'send request to find classifier by version'
+            def response = findClassifierByVersion(1)
+
+        then: 'verify response'
+            noExceptionThrown()
+            response.statusCode == HttpStatus.OK
+            response.body.size() == 2
+            response.body.version == 1
+            response.body.decisionTreePath == wekaDir.absolutePath + File.separator + 1 + File.separator + 'decision_tree.png'
+    }
+
+
+    def 'verify that we will get 404 if classifier is not found by version'() {
+        when: 'send request to find classifier by version'
+            def response = findClassifierByVersion(Integer.MAX_VALUE)
+
+        then: 'verify response'
+            noExceptionThrown()
+            response.statusCode == HttpStatus.NOT_FOUND
+            !response.body
+    }
 }

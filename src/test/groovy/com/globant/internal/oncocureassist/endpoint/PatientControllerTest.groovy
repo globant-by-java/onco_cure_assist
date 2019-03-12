@@ -1136,14 +1136,14 @@ class PatientControllerTest extends AbstractIntegrationTest {
 
 
         when: 'send patient to classify'
-            def responseOne = classifyPatient(patientOne, [version: 1])
+            def responseOne = classifyPatient(patientOne, 1)
 
         then: 'class id was predicted'
             responseOne.statusCode == HttpStatus.OK
             responseOne.body == 0
 
         when: 'send patient to classify'
-            def responseTwo = classifyPatient(patientTwo, [version: 1])
+            def responseTwo = classifyPatient(patientTwo, 1)
 
         then: 'class id was predicted'
             responseTwo.statusCode == HttpStatus.OK
@@ -1156,7 +1156,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             def patient = SampleDataProvider.createPatient([ageClass: 1])
 
         when: 'send patient to classify'
-            def response = classifyPatient(patient, [version: 1])
+            def response = classifyPatient(patient, 1)
 
         then: 'error was occurred'
             response.statusCode == HttpStatus.BAD_REQUEST
@@ -1164,5 +1164,18 @@ class PatientControllerTest extends AbstractIntegrationTest {
             !response.body.code
             !response.body.field
             !response.body.object
+    }
+
+
+    def 'verify that patient cannot be classified if version is invalid'() {
+        given: 'create patient request'
+            def patient = SampleDataProvider.createPatient()
+
+        when: 'send patient to classify'
+            def response = classifyPatient(patient, 0)
+
+        then: 'error was occurred'
+            response.statusCode == HttpStatus.NOT_FOUND
+            !response.body
     }
 }

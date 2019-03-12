@@ -1,6 +1,7 @@
 package com.globant.internal.oncocureassist.endpoint;
 
 import com.globant.internal.oncocureassist.repository.entity.Patient;
+import com.globant.internal.oncocureassist.service.ClassifierService;
 import com.globant.internal.oncocureassist.service.PatientService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,10 +22,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class PatientController {
 
     private final PatientService patientService;
+    private final ClassifierService classifierService;
 
 
-    public PatientController(PatientService patientService) {
+    public PatientController(PatientService patientService,
+                             ClassifierService classifierService) {
         this.patientService = patientService;
+        this.classifierService = classifierService;
     }
 
 
@@ -47,7 +50,7 @@ public class PatientController {
     public ResponseEntity<Patient> findById(@PathVariable Long id) {
         return patientService.findById(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
 
@@ -58,9 +61,13 @@ public class PatientController {
     }
 
 
-    @PostMapping("/classify")
-    public Integer classify(@RequestBody Patient patient,
-                            @RequestParam(required = false, defaultValue = "1") Integer version) {
-        return patientService.classifyPatient(patient, version);
+    @PostMapping("/classify/version/{version}")
+    public ResponseEntity<Integer> classify(@PathVariable Integer version, @RequestBody Patient patient) {
+        return classifierService.findAll().stream()
+                .filter(model -> model.getVersion() == version)
+                .findFirst()
+                .map(model -> patientService.classifyPatient(patient, version))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
