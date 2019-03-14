@@ -63,7 +63,7 @@ abstract class AbstractIntegrationTest extends Specification {
 
 
     def classifyPatient(def patient, def version) {
-        return restTemplate.postForEntity("/api/patients/classify/version/${version}", patient, Object)
+        return restTemplate.postForEntity("/api/patients/version/${version}/classify", patient, Object)
     }
 
 
