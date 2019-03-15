@@ -13,3 +13,6 @@ spring:
     username: <your_username>
     password: <your_password>
 ```    
+
+## Swagger
+To see all endpoints of the application use swagger: {application_path}/swagger-ui.html#/
