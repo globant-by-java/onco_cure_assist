@@ -49,7 +49,7 @@ abstract class AbstractConstraintValidator<T> implements ConstraintValidator<T> 
 
 
     LocalDate getMinDate() {
-        return LocalDate.of(1990, 1, 1);
+        return LocalDate.of(1900, 1, 1);
     }
 
 

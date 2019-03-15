@@ -92,13 +92,13 @@ class PatientValidatorTest extends Specification {
 
             LocalDate.now()             | 'birthDate'   | 'validation.invalid.date.range.error'           || 0                 || 2
             LocalDate.of(1990, 1, 1)    | 'birthDate'   | 'validation.invalid.date.range.error'           || 0                 || 1
-            LocalDate.of(1989, 12, 31)  | 'birthDate'   | 'validation.invalid.date.range.error'           || 1                 || 2
+            LocalDate.of(1899, 12, 31)  | 'birthDate'   | 'validation.invalid.date.range.error'           || 1                 || 2
             LocalDate.now().plusDays(1) | 'birthDate'   | 'validation.invalid.date.range.error'           || 1                 || 3
             null                        | 'birthDate'   | 'validation.invalid.date.range.error'           || 1                 || 1
 
             LocalDate.now()             | 'contactDate' | 'validation.invalid.date.range.error'           || 0                 || 0
-            LocalDate.of(1990, 1, 1)    | 'contactDate' | 'validation.invalid.date.range.error'           || 0                 || 2
-            LocalDate.of(1989, 12, 31)  | 'contactDate' | 'validation.invalid.date.range.error'           || 1                 || 3
+            LocalDate.of(1900, 1, 1)    | 'contactDate' | 'validation.invalid.date.range.error'           || 0                 || 2
+            LocalDate.of(1899, 12, 31)  | 'contactDate' | 'validation.invalid.date.range.error'           || 1                 || 3
             LocalDate.now().plusDays(1) | 'contactDate' | 'validation.invalid.date.range.error'           || 1                 || 1
             null                        | 'contactDate' | 'validation.invalid.date.range.error'           || 1                 || 1
     }

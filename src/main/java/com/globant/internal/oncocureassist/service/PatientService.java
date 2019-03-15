@@ -15,4 +15,6 @@ public interface PatientService {
     Optional<Patient> findById(Long id);
 
     void delete(Long id);
+
+    int classifyPatient(Patient patient, Integer version);
 }

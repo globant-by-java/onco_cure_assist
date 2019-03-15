@@ -220,10 +220,10 @@ class PatientControllerTest extends AbstractIntegrationTest {
                 it.field == 'gender' && it.description == "Acceptable values are 'male' or 'female'"
             }
             patientSpecificFields.find {
-                it.field == 'birthDate' && it.description == "Date must be specified between ${LocalDate.of(1990, 1, 1)} and ${LocalDate.now()}"
+                it.field == 'birthDate' && it.description == "Date must be specified between ${LocalDate.of(1900, 1, 1)} and ${LocalDate.now()}"
             }
             patientSpecificFields.find {
-                it.field == 'contactDate' && it.description == "Date must be specified between ${LocalDate.of(1990, 1, 1)} and ${LocalDate.now()}"
+                it.field == 'contactDate' && it.description == "Date must be specified between ${LocalDate.of(1900, 1, 1)} and ${LocalDate.now()}"
             }
             patientSpecificFields.find {
                 it.field == 'ageClass' && it.description == "Age class was specified incorrectly. Please choose the right range"
@@ -250,7 +250,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
         then: 'validation error occurred'
             response.statusCode == HttpStatus.BAD_REQUEST
             response.body.find {
-                it.field == 'birthDate' && it.description == "Date must be specified between ${LocalDate.of(1990, 1, 1)} and ${LocalDate.now()}"
+                it.field == 'birthDate' && it.description == "Date must be specified between ${LocalDate.of(1900, 1, 1)} and ${LocalDate.now()}"
             }
             response.body.find {
                 it.field == 'birthDate' && it.description == "Birth date must be before contact date"
@@ -427,7 +427,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             treatmentErrors.find { it.field == 'surgeonName' && it.description == 'size must be between 0 and 127' }
             treatmentErrors.find { it.field == 'surgeryCode' && it.description == 'must be greater than or equal to 0' }
             treatmentErrors.find {
-                it.field == 'surgeryDate' && it.description == "Date must be specified between ${LocalDate.of(1990, 1, 1)} and ${LocalDate.now()}"
+                it.field == 'surgeryDate' && it.description == "Date must be specified between ${LocalDate.of(1900, 1, 1)} and ${LocalDate.now()}"
             }
 
         where:
@@ -517,7 +517,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
                                           egfr20Tumor    : 'egfr20Tumor',
                                           egfr20Norm     : 'egfr20Norm',
                                           egfr21Tumor    : 'egfr21Tumor',
-                                          egfr21norm     : 'egfr21norm',
+                                          egfr21Norm     : 'egfr21Norm',
                                           egfr21Blood    : 'egfr21Blood',
                                           tgf509         : 'tgf509',
                                           tgf25Codon     : 'tgf25Codon',
@@ -619,7 +619,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
                 it.field == 'egfr21Tumor' && it.description == 'The code was specified incorrectly. Expected values [no, 2508C/T, L858R]'
             }
             geneticPredictorsErrors.find {
-                it.field == 'egfr21norm' && it.description == 'The code was specified incorrectly. Expected values [no, 2508C/T]'
+                it.field == 'egfr21Norm' && it.description == 'The code was specified incorrectly. Expected values [no, 2508C/T]'
             }
             geneticPredictorsErrors.find {
                 it.field == 'egfr21Blood' && it.description == 'The code was specified incorrectly. Expected values [no, 2508C/T]'
@@ -646,7 +646,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
                 it.field == 'mmp92660' && it.description == 'The code was specified incorrectly. Expected values [A/A, G/A, G/G]'
             }
             geneticPredictorsErrors.find {
-                it.field == 'mmp91562' && it.description == 'The code was specified incorrectly. Expected values [G/G, G/A, A/A]'
+                it.field == 'mmp91562' && it.description == 'The code was specified incorrectly. Expected values [C/C, C/T]'
             }
             geneticPredictorsErrors.find {
                 it.field == 'mmp2735' && it.description == 'The code was specified incorrectly. Expected values [C/C, C/T, T/T]'
@@ -844,7 +844,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
 
     def 'verify that some fields were enrich before save or update'() {
         given: 'create patient'
-            def patient = SampleDataProvider.createPatient([contactDate: LocalDate.now().minusMonths(36), age: 17, ageClass: 1])
+            def patient = SampleDataProvider.createPatient([contactDate: LocalDate.now().minusMonths(36), age: 27, ageClass: 2])
             patient.treatment << [surgeryDate: LocalDate.now()]
             patient.diagnostics << [tnm: 'T1aN0M0']
 
@@ -866,7 +866,7 @@ class PatientControllerTest extends AbstractIntegrationTest {
             savedPatients[0].diagnostics.m == '0'
 
         when: 'send request to update patient'
-            patient << [id: savedPatients[0].id, contactDate: LocalDate.now().minusMonths(35), age: 17, ageClass: 1, version: savedPatients[0].version]
+            patient << [id: savedPatients[0].id, contactDate: LocalDate.now().minusMonths(35), age: 27, ageClass: 2, version: savedPatients[0].version]
             patient.treatment << [id: savedPatients[0].treatment.id, surgeryDate: LocalDate.now().minusMonths(1)]
             patient.diagnostics << [id: savedPatients[0].diagnostics.id, tnm: 'T0aNxM1']
             patient.geneticPredictors << [id: savedPatients[0].geneticPredictors.id]
@@ -1024,5 +1024,145 @@ class PatientControllerTest extends AbstractIntegrationTest {
         then: 'optimistic lock exception has occurred'
             response.statusCode == HttpStatus.CONFLICT
             response.body.description == 'Patient was already updated by another person. Please refresh the page'
+    }
+
+
+    def 'verify that we can classify patient without classId'() {
+        given: 'create two patient requests'
+            def patientOne = SampleDataProvider.createPatient([])
+
+
+            def patientTwo = SampleDataProvider.createPatient([
+                    gender       : 1,
+                    birthDate    : "1952-11-16",
+                    contactDate  : "2007-08-03",
+                    survivalMonth: 10.0,
+                    cardNumber   : "12792/03",
+                    classId      : null,
+                    age          : 55,
+                    ageClass     : 5])
+
+            patientTwo.diagnostics << [tnm                               : "T2N0M0",
+                                       tumourSize                        : 1,
+                                       bronchialCarcinoma                : false,
+                                       lungCarcinoma                     : true,
+                                       peribroncialCarcinoma             : false,
+                                       interlobar                        : false,
+                                       subcarinal                        : false,
+                                       lowerParatracheal                 : false,
+                                       upperParatracheal                 : false,
+                                       oncoAnamesys                      : false,
+                                       stage                             : "1",
+                                       complains                         : false,
+                                       grade                             : 2,
+                                       histologyDiagnosis                : 1,
+                                       smoking                           : true,
+                                       t                                 : "2",
+                                       n                                 : "0",
+                                       m                                 : "0",
+                                       copd                              : true,
+                                       tuberculomas                      : false,
+                                       chd                               : false,
+                                       lcd                               : false,
+                                       inflammatoryDigestiveProcesses    : true,
+                                       hepatitis                         : false,
+                                       cirrhosis                         : false,
+                                       pancreatitis                      : false,
+                                       musculoskeletalDiseases           : false,
+                                       inflammatoryKidneysBladderDiseases: false,
+                                       prostateBenignDiseases            : false,
+                                       veinsDiseases                     : false,
+                                       bloodVesselsDiseases              : false,
+                                       rhythmDisturbances                : false,
+                                       thyroidGlandBenignDiseases        : false,
+                                       nervousDiseases                   : false,
+                                       strokes                           : false,
+                                       rheumaticDiseases                 : false,
+                                       anemia                            : false
+            ]
+
+            patientTwo.treatment << [surgeryApplied         : true,
+                                     chemotherapyApplied    : true,
+                                     radiationTherapyApplied: false,
+                                     surgeryCode            : 0,
+                                     surgeonName            : null,
+                                     surgeryDate            : "2006-11-30",
+                                     firstLineCourse        : 2,
+                                     secondLineCourse       : null,
+                                     thirdLineCourse        : null
+            ]
+
+            patientTwo.geneticPredictors << [vegf634        : "G/G",
+                                             vegf2578       : "A/A",
+                                             vegf936        : "C/T",
+                                             egf            : "G/A",
+                                             gstt           : "1",
+                                             gstm           : "0",
+                                             gstp           : "G/A",
+                                             natkpn         : "C/C",
+                                             nattag         : "G/A",
+                                             natbam         : "G/G",
+                                             acetylationType: "1",
+                                             cyp1a2         : "C/A",
+                                             cyp2d6         : "G/A",
+                                             mdr            : "C/T",
+                                             egfr18Tumor    : null,
+                                             egfr18Norm     : null,
+                                             egfr19Tumor    : null,
+                                             egfr19Norm     : null,
+                                             egfr20Tumor    : null,
+                                             egfr20Norm     : null,
+                                             egfr21Tumor    : null,
+                                             egfr21norm     : null,
+                                             egfr21Blood    : null,
+                                             tgf509         : "C/T",
+                                             tgf25Codon     : null,
+                                             tgfr206        : null,
+                                             kdr1719        : "T/T",
+                                             kdr906         : "C/C",
+                                             sult1          : null,
+                                             mmp92660       : "A/A",
+                                             mmp91562       : null,
+                                             mmp2735        : "C/C",
+                                             mmp21575       : "G/A",
+                                             kras2exTumor   : null,
+                                             kras2exNorm    : null,
+                                             pik3ca9ex      : null,
+                                             pik3ca20ex     : null,
+                                             pten           : null,
+                                             dnmt149        : null,
+                                             dnmt579        : null
+            ]
+
+
+        when: 'send patient to classify'
+            def responseOne = classifyPatient(patientOne, [version: 1])
+
+        then: 'class id was predicted'
+            responseOne.statusCode == HttpStatus.OK
+            responseOne.body == 0
+
+        when: 'send patient to classify'
+            def responseTwo = classifyPatient(patientTwo, [version: 1])
+
+        then: 'class id was predicted'
+            responseTwo.statusCode == HttpStatus.OK
+            responseTwo.body == 1
+    }
+
+
+    def 'verify that we handle errors when classify patient'() {
+        given: 'create patient request with not valid data'
+            def patient = SampleDataProvider.createPatient([ageClass: 1])
+
+        when: 'send patient to classify'
+            def response = classifyPatient(patient, [version: 1])
+
+        then: 'error was occurred'
+            response.statusCode == HttpStatus.BAD_REQUEST
+            response.body.description == 'The patient cannot be classified. Please update the classifier and try again'
+            !response.body.code
+            !response.body.field
+            !response.body.object
     }
 }

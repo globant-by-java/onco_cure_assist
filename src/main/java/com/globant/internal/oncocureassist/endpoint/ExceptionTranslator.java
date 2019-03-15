@@ -2,6 +2,8 @@ package com.globant.internal.oncocureassist.endpoint;
 
 import static org.springframework.context.i18n.LocaleContextHolder.getLocale;
 
+import com.globant.internal.oncocureassist.domain.exception.ClassifierCreationException;
+import com.globant.internal.oncocureassist.domain.exception.ClassifierExecutionException;
 import com.globant.internal.oncocureassist.domain.exception.PatientValidationException;
 import org.hibernate.StaleObjectStateException;
 import org.springframework.context.MessageSource;
@@ -47,6 +49,20 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
     public ResponseEntity<Object> handleStaleObjectStateException(StaleObjectStateException exc, WebRequest request) {
         ApiError error = new ApiError(messageSource.getMessage("patient.optimistic.lock.error", null, getLocale()));
         return handleExceptionInternal(exc, error, null, HttpStatus.CONFLICT, request);
+    }
+
+
+    @ExceptionHandler
+    public ResponseEntity<Object> handleClassifierCreationException(ClassifierCreationException exc, WebRequest request) {
+        ApiError error = new ApiError(messageSource.getMessage("classifier.creation.error", null, getLocale()));
+        return handleExceptionInternal(exc, error, null, HttpStatus.BAD_REQUEST, request);
+    }
+
+
+    @ExceptionHandler
+    public ResponseEntity<Object> handleClassifierExecutionException(ClassifierExecutionException exc, WebRequest request) {
+        ApiError error = new ApiError(messageSource.getMessage("classifier.execution.error", null, getLocale()));
+        return handleExceptionInternal(exc, error, null, HttpStatus.BAD_REQUEST, request);
     }
 
 
