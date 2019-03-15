@@ -4,6 +4,7 @@ public enum FileTemplate {
 
     CLASSIFIER("patient_classifier.model"),
     TEMPLATE("patient_template.arff"),
+    DECISION_TREE("decision_tree.png"),
     EMPTY("");
 
 
